@@ -1,5 +1,7 @@
 # YouTube Channel Blocker
 
+![YouTube Channel Blocker banner](assets/youtube-channel-blocker-banner.png)
+
 A lightweight browser extension for hiding videos, comments, search results, channel cards, playlists, and other YouTube content from channels you choose to block.
 
 The extension uses Manifest V3 and stores the blocklist with `chrome.storage.sync`, allowing it to follow the signed-in browser profile across supported Chromium browsers.
@@ -64,6 +66,8 @@ Name-based matching is intentionally flexible. It can match more than one simila
 | `popup.html`, `popup.js`, `popup.css` | Toolbar popup interface |
 | `options.html`, `options.js`, `options.css` | Full blocklist manager and import/export interface |
 | `icons/` | Browser action icons |
+| `assets/logos/` | Platform-specific Firefox Desktop and Firefox for Android logos |
+| `assets/youtube-channel-blocker-banner.png` | Repository and store-listing banner |
 | `.github/workflows/build-extension.yml` | Automated validation and ZIP packaging workflow |
 
 ## Build locally
