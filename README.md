@@ -6,6 +6,16 @@ A lightweight browser extension for hiding videos, comments, search results, cha
 
 The extension uses Manifest V3 and stores the blocklist with `chrome.storage.sync`, allowing it to follow the signed-in browser profile across supported Chromium browsers.
 
+## Preview
+
+The toolbar popup provides a quick way to add channels, inspect the current page, toggle filtering, and remove entries from the synchronized blocklist.
+
+![YouTube Channel Blocker popup preview](assets/screenshots/popup-preview.png)
+
+The full options page provides the blocklist manager, matching-type controls, import/export actions, and a global enable/disable switch.
+
+![YouTube Channel Blocker options page preview](assets/screenshots/options-preview.png)
+
 ## Features
 
 - Block channels by channel ID, `@handle`, or display name.
