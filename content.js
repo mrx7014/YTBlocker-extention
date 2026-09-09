@@ -98,21 +98,32 @@
 
     const box = document.createElement('div');
     box.className = 'ycb-dialog';
-    box.innerHTML =
-      '<p class="ycb-dialog-title">Block this channel?</p>' +
-      '<p class="ycb-dialog-msg">' + label + '</p>' +
-      '<div class="ycb-dialog-row">' +
-      '<button type="button" class="ycb-dialog-btn ycb-dialog-btn-no">No</button>' +
-      '<button type="button" class="ycb-dialog-btn ycb-dialog-btn-yes">Yes, block</button>' +
-      '</div>';
+    const title = document.createElement('p');
+    title.className = 'ycb-dialog-title';
+    title.textContent = 'Block this channel?';
+    const message = document.createElement('p');
+    message.className = 'ycb-dialog-msg';
+    message.textContent = label;
+    const row = document.createElement('div');
+    row.className = 'ycb-dialog-row';
+    const noButton = document.createElement('button');
+    noButton.type = 'button';
+    noButton.className = 'ycb-dialog-btn ycb-dialog-btn-no';
+    noButton.textContent = 'No';
+    const yesButton = document.createElement('button');
+    yesButton.type = 'button';
+    yesButton.className = 'ycb-dialog-btn ycb-dialog-btn-yes';
+    yesButton.textContent = 'Yes, block';
+    row.append(noButton, yesButton);
+    box.append(title, message, row);
     document.body.appendChild(box);
     requestAnimationFrame(() => box.classList.add('ycb-dialog-show'));
 
-    box.querySelector('.ycb-dialog-btn-yes').addEventListener('click', () => {
+    yesButton.addEventListener('click', () => {
       removeDialog();
       onChoice(true);
     });
-    box.querySelector('.ycb-dialog-btn-no').addEventListener('click', () => {
+    noButton.addEventListener('click', () => {
       removeDialog();
       onChoice(false);
     });
@@ -123,16 +134,24 @@
 
     const box = document.createElement('div');
     box.className = 'ycb-dialog';
-    box.innerHTML =
-      '<div class="ycb-dialog-result">' +
-      '<span class="ycb-dialog-result-icon ' + (tone || 'ok') + '"></span>' +
-      '<span class="ycb-dialog-msg" style="margin:0;color:#EDEEF0;">' + message + '</span>' +
-      '</div>' +
-      '<button type="button" class="ycb-dialog-ok-btn">OK</button>';
+    const result = document.createElement('div');
+    result.className = 'ycb-dialog-result';
+    const icon = document.createElement('span');
+    icon.className = 'ycb-dialog-result-icon ' + (tone || 'ok');
+    const resultMessage = document.createElement('span');
+    resultMessage.className = 'ycb-dialog-msg';
+    resultMessage.style.cssText = 'margin:0;color:#EDEEF0;';
+    resultMessage.textContent = message;
+    result.append(icon, resultMessage);
+    const okButton = document.createElement('button');
+    okButton.type = 'button';
+    okButton.className = 'ycb-dialog-ok-btn';
+    okButton.textContent = 'OK';
+    box.append(result, okButton);
     document.body.appendChild(box);
     requestAnimationFrame(() => box.classList.add('ycb-dialog-show'));
 
-    box.querySelector('.ycb-dialog-ok-btn').addEventListener('click', removeDialog);
+    okButton.addEventListener('click', removeDialog);
     setTimeout(removeDialog, 3000);
   }
 
@@ -215,15 +234,24 @@
 
     const overlay = document.createElement('div');
     overlay.className = 'ycb-overlay';
-    overlay.innerHTML =
-      '<div class="ycb-overlay-card">' +
-      '<div class="ycb-overlay-icon"></div>' +
-      '<p class="ycb-overlay-title">This channel is blocked</p>' +
-      '<p class="ycb-overlay-sub">' + (label || entry.value) + '</p>' +
-      '<button type="button" class="ycb-overlay-btn">Unblock and watch</button>' +
-      '</div>';
+    const card = document.createElement('div');
+    card.className = 'ycb-overlay-card';
+    const icon = document.createElement('div');
+    icon.className = 'ycb-overlay-icon';
+    const title = document.createElement('p');
+    title.className = 'ycb-overlay-title';
+    title.textContent = 'This channel is blocked';
+    const subtitle = document.createElement('p');
+    subtitle.className = 'ycb-overlay-sub';
+    subtitle.textContent = label || entry.value;
+    const unblockButton = document.createElement('button');
+    unblockButton.type = 'button';
+    unblockButton.className = 'ycb-overlay-btn';
+    unblockButton.textContent = 'Unblock and watch';
+    card.append(icon, title, subtitle, unblockButton);
+    overlay.appendChild(card);
 
-    overlay.querySelector('.ycb-overlay-btn').addEventListener('click', async () => {
+    unblockButton.addEventListener('click', async () => {
       await ycbRemoveEntry(entry);
       removeOverlay();
     });
