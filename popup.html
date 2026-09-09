@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>YouTube Channel Blocker</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header class="head">
+    <div class="head-title">
+      <span class="mark"></span>
+      <h1>Channel Blocker</h1>
+    </div>
+    <label class="switch" title="Turn blocking on or off">
+      <input type="checkbox" id="enabledToggle" checked />
+      <span class="switch-track"><span class="switch-thumb"></span></span>
+    </label>
+  </header>
+
+  <section id="currentChannelRow" class="current-row" hidden>
+    <div class="current-info">
+      <span class="current-label">On this page</span>
+      <span id="currentChannelName" class="current-name">—</span>
+    </div>
+    <button id="blockCurrentBtn" type="button" class="btn btn-danger">Block</button>
+  </section>
+
+  <section class="add-row">
+    <input
+      id="addInput"
+      type="text"
+      placeholder="Paste a channel link, @handle, or name"
+      autocomplete="off"
+    />
+    <button id="addBtn" type="button" class="btn btn-primary">Add</button>
+  </section>
+  <p id="statusMsg" class="status-msg" hidden></p>
+
+  <section id="confirmBar" class="confirm-bar" hidden>
+    <span id="confirmMsg" class="confirm-msg"></span>
+    <div class="confirm-actions">
+      <button id="confirmNo" type="button" class="btn">No</button>
+      <button id="confirmYes" type="button" class="btn btn-danger">Yes, block</button>
+    </div>
+  </section>
+
+  <section class="list-section">
+    <div class="list-head">
+      <span>Blocked channels</span>
+      <span id="countBadge" class="count-badge">0</span>
+    </div>
+    <ul id="blockedList" class="blocked-list"></ul>
+    <p id="emptyState" class="empty-state">No channels blocked yet. Right-click any channel link on YouTube to add it.</p>
+  </section>
+
+  <footer class="foot">
+    <a id="openOptions" href="#">Manage &amp; export list</a>
+  </footer>
+
+  <script src="common.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

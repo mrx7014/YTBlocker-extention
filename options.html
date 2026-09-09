@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>YouTube Channel Blocker — Manage list</title>
+  <link rel="stylesheet" href="options.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="page-head">
+      <div class="page-head-title">
+        <span class="mark"></span>
+        <h1>Channel Blocker</h1>
+      </div>
+      <label class="switch" title="Turn blocking on or off">
+        <input type="checkbox" id="enabledToggle" checked />
+        <span class="switch-track"><span class="switch-thumb"></span></span>
+        <span id="enabledLabel" class="switch-label">On</span>
+      </label>
+    </header>
+
+    <p class="page-sub">
+      Videos, comments, and search results from these channels are hidden across
+      YouTube. Match by channel ID or @handle for exact results, or by name as a
+      looser fallback.
+    </p>
+
+    <section class="panel">
+      <h2>Add a channel</h2>
+      <div class="add-row">
+        <select id="addType">
+          <option value="auto">Auto-detect</option>
+          <option value="id">Channel ID (UC…)</option>
+          <option value="handle">Handle (@name)</option>
+          <option value="name">Channel name</option>
+        </select>
+        <input id="addInput" type="text" placeholder="Paste a link, @handle, ID, or name" />
+        <button id="addBtn" type="button" class="btn btn-primary">Add</button>
+      </div>
+      <p class="hint">Tip: right-click any channel link on YouTube for a one-click "Block this channel" option.</p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Blocked channels (<span id="countBadge">0</span>)</h2>
+        <div class="panel-actions">
+          <button id="exportBtn" type="button" class="btn btn-ghost">Export</button>
+          <label class="btn btn-ghost file-btn">
+            Import
+            <input id="importInput" type="file" accept="application/json" hidden />
+          </label>
+          <button id="clearBtn" type="button" class="btn btn-ghost btn-ghost-danger">Clear all</button>
+        </div>
+      </div>
+
+      <table class="list-table">
+        <thead>
+          <tr>
+            <th>Channel</th>
+            <th>Match type</th>
+            <th>Value</th>
+            <th>Added</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <p id="emptyState" class="empty-state">Nothing blocked yet.</p>
+    </section>
+  </div>
+
+  <script src="common.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>

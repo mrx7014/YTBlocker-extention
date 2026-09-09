@@ -1,0 +1,223 @@
+.ycb-block-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 2147483000;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(17, 17, 17, 0.85);
+  color: #fff;
+  font-size: 13px;
+  line-height: 26px;
+  text-align: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms ease, background 120ms ease;
+  padding: 0;
+}
+
+.ycb-hoverable:hover .ycb-block-btn,
+.ycb-block-btn:focus-visible {
+  opacity: 1;
+}
+
+.ycb-block-btn:hover {
+  background: #E53950;
+}
+
+.ycb-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #101114;
+  color: #EDEEF0;
+  font-family: "Roboto", Arial, sans-serif;
+  text-align: center;
+}
+
+.ycb-overlay-card {
+  max-width: 320px;
+  padding: 24px;
+}
+
+.ycb-overlay-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #E53950;
+  margin: 0 auto 14px;
+  position: relative;
+}
+
+.ycb-overlay-icon::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 26px;
+  height: 2px;
+  background: #E53950;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.ycb-overlay-title {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0 0 6px;
+}
+
+.ycb-overlay-sub {
+  font-size: 13px;
+  color: #9AA0A8;
+  margin: 0 0 18px;
+}
+
+.ycb-overlay-btn {
+  border: 1px solid #2A2C32;
+  background: transparent;
+  color: #EDEEF0;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.ycb-overlay-btn:hover {
+  border-color: #E53950;
+  color: #E53950;
+}
+
+.ycb-toast {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: #1D1F24;
+  border: 1px solid #2A2C32;
+  border-left: 3px solid #E53950;
+  color: #EDEEF0;
+  font-family: "Roboto", Arial, sans-serif;
+  font-size: 13px;
+  padding: 10px 16px 10px 12px;
+  border-radius: 4px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 160ms ease, transform 160ms ease;
+  pointer-events: none;
+}
+
+.ycb-toast-show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ycb-toast-icon {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #E53950;
+  flex: none;
+}
+
+.ycb-dialog {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 2147483647;
+  width: 280px;
+  background: #1D1F24;
+  border: 1px solid #2A2C32;
+  border-left: 3px solid #E53950;
+  border-radius: 6px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  font-family: "Roboto", Arial, sans-serif;
+  color: #EDEEF0;
+  padding: 14px 16px;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.ycb-dialog-show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ycb-dialog-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.ycb-dialog-msg {
+  font-size: 12.5px;
+  color: #9AA0A8;
+  line-height: 1.5;
+  margin: 0 0 14px;
+}
+
+.ycb-dialog-row {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.ycb-dialog-btn {
+  border: 1px solid #2A2C32;
+  background: transparent;
+  color: #EDEEF0;
+  border-radius: 4px;
+  padding: 6px 13px;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.ycb-dialog-btn:hover {
+  border-color: #9AA0A8;
+}
+
+.ycb-dialog-btn-yes {
+  border-color: #E53950;
+  color: #E53950;
+}
+
+.ycb-dialog-btn-yes:hover {
+  background: rgba(229, 57, 80, 0.12);
+}
+
+.ycb-dialog-result {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.ycb-dialog-result-icon {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.ycb-dialog-result-icon.ok { background: #5B8DEF; }
+.ycb-dialog-result-icon.cancel { background: #9AA0A8; }
+
+.ycb-dialog-ok-btn {
+  margin-top: 12px;
+  border: 1px solid #2A2C32;
+  background: transparent;
+  color: #9AA0A8;
+  border-radius: 4px;
+  padding: 5px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.ycb-dialog-ok-btn:hover { color: #EDEEF0; border-color: #9AA0A8; }

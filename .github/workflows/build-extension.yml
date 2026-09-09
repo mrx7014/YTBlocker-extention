@@ -1,0 +1,92 @@
+name: Build extension
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-and-build:
+    name: Validate and package extension
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate required files
+        shell: bash
+        run: |
+          set -euo pipefail
+          required_files=(
+            manifest.json
+            background.js
+            common.js
+            content.js
+            content.css
+            popup.html
+            popup.js
+            popup.css
+            options.html
+            options.js
+            options.css
+            README.md
+            LICENSE
+            icons/icon16.png
+            icons/icon32.png
+            icons/icon48.png
+            icons/icon128.png
+          )
+
+          for file in "${required_files[@]}"; do
+            test -f "$file" || { echo "Missing required file: $file" >&2; exit 1; }
+          done
+
+      - name: Validate manifest JSON
+        run: node -e "JSON.parse(require('fs').readFileSync('manifest.json', 'utf8')); console.log('manifest.json is valid JSON')"
+
+      - name: Check JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in *.js; do
+            node --check "$file"
+          done
+
+      - name: Validate PNG icons
+        shell: bash
+        run: |
+          set -euo pipefail
+          file icons/icon16.png | grep -F '16 x 16'
+          file icons/icon32.png | grep -F '32 x 32'
+          file icons/icon48.png | grep -F '48 x 48'
+          file icons/icon128.png | grep -F '128 x 128'
+
+      - name: Package extension
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          zip -r -FS dist/youtube-channel-blocker.zip \
+            manifest.json background.js common.js content.js content.css \
+            popup.html popup.js popup.css \
+            options.html options.js options.css icons README.md LICENSE
+
+      - name: Upload extension artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: youtube-channel-blocker
+          path: dist/youtube-channel-blocker.zip
+          if-no-files-found: error
+          retention-days: 30
