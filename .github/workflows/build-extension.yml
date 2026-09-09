@@ -1,4 +1,4 @@
-name: Build extension
+name: Build extensions
 
 on:
   push:
@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   validate-and-build:
-    name: Validate and package extension
+    name: Validate and package web and Android extensions
     runs-on: ubuntu-latest
 
     steps:
@@ -25,12 +25,15 @@ jobs:
         with:
           node-version: 22
 
-      - name: Validate required files
+      - name: Validate required files and icons
         shell: bash
         run: |
           set -euo pipefail
           required_files=(
             manifest.json
+            platforms/web/manifest.json
+            platforms/android/manifest.json
+            build-extensions.sh
             background.js
             common.js
             content.js
@@ -53,40 +56,29 @@ jobs:
             test -f "$file" || { echo "Missing required file: $file" >&2; exit 1; }
           done
 
-      - name: Validate manifest JSON
-        run: node -e "JSON.parse(require('fs').readFileSync('manifest.json', 'utf8')); console.log('manifest.json is valid JSON')"
-
-      - name: Check JavaScript syntax
-        shell: bash
-        run: |
-          set -euo pipefail
-          for file in *.js; do
-            node --check "$file"
-          done
-
-      - name: Validate PNG icons
-        shell: bash
-        run: |
-          set -euo pipefail
           file icons/icon16.png | grep -F '16 x 16'
           file icons/icon32.png | grep -F '32 x 32'
           file icons/icon48.png | grep -F '48 x 48'
           file icons/icon128.png | grep -F '128 x 128'
 
-      - name: Package extension
+      - name: Validate manifests and JavaScript
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p dist
-          zip -r -FS dist/youtube-channel-blocker.zip \
-            manifest.json background.js common.js content.js content.css \
-            popup.html popup.js popup.css \
-            options.html options.js options.css icons README.md LICENSE
+          python3 -m json.tool manifest.json >/dev/null
+          python3 -m json.tool platforms/web/manifest.json >/dev/null
+          python3 -m json.tool platforms/android/manifest.json >/dev/null
+          for file in *.js; do node --check "$file"; done
 
-      - name: Upload extension artifact
+      - name: Build both extension packages
+        run: bash build-extensions.sh
+
+      - name: Upload extension artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: youtube-channel-blocker
-          path: dist/youtube-channel-blocker.zip
+          name: youtube-channel-blocker-v1.0.0
+          path: |
+            dist/youtube-channel-blocker-web-v1.0.0.zip
+            dist/youtube-channel-blocker-android-v1.0.0.zip
           if-no-files-found: error
           retention-days: 30
