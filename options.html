@@ -11,7 +11,10 @@
     <header class="page-head">
       <div class="page-head-title">
         <span class="mark"></span>
-        <h1>Channel Blocker</h1>
+        <div>
+          <p class="eyebrow">YOUTUBE PRIVACY CONTROLS</p>
+          <h1>Channel Blocker</h1>
+        </div>
       </div>
       <label class="switch" title="Turn blocking on or off">
         <input type="checkbox" id="enabledToggle" checked />
@@ -20,54 +23,77 @@
       </label>
     </header>
 
-    <p class="page-sub">
-      Videos, comments, and search results from these channels are hidden across
-      YouTube. Match by channel ID or @handle for exact results, or by name as a
-      looser fallback.
-    </p>
+    <p class="page-sub">Manage your blocked channels in one place. Changes sync with your browser profile.</p>
 
     <section class="panel">
-      <h2>Add a channel</h2>
+      <div class="section-intro">
+        <span class="section-icon" aria-hidden="true">＋</span>
+        <div><h2>Add a channel</h2><p>Paste a YouTube link, channel ID, @handle, or name.</p></div>
+      </div>
       <div class="add-row">
-        <select id="addType">
+        <select id="addType" aria-label="How to match this channel">
           <option value="auto">Auto-detect</option>
           <option value="id">Channel ID (UC…)</option>
           <option value="handle">Handle (@name)</option>
           <option value="name">Channel name</option>
         </select>
-        <input id="addInput" type="text" placeholder="Paste a link, @handle, ID, or name" />
-        <button id="addBtn" type="button" class="btn btn-primary">Add</button>
+        <input id="addInput" type="text" placeholder="Paste a link, @handle, ID, or name" autocomplete="off" />
+        <button id="addBtn" type="button" class="btn btn-primary"><span aria-hidden="true">＋</span> Add channel</button>
       </div>
-      <p class="hint">Tip: right-click any channel link on YouTube for a one-click "Block this channel" option.</p>
+      <p class="hint">For the most precise match, use a channel ID or @handle. Names may match similarly named channels.</p>
     </section>
 
     <section class="panel">
       <div class="panel-head">
-        <h2>Blocked channels (<span id="countBadge">0</span>)</h2>
+        <div class="section-intro list-heading">
+          <span class="section-icon section-icon-blocked" aria-hidden="true">⊘</span>
+          <div><h2>Blocked channels</h2><p><span id="countBadge">0</span> channels in your list</p></div>
+        </div>
         <div class="panel-actions">
-          <button id="exportBtn" type="button" class="btn btn-ghost">Export</button>
-          <label class="btn btn-ghost file-btn">
-            Import
+          <button id="exportBtn" type="button" class="btn btn-ghost"><span aria-hidden="true">↓</span> Export</button>
+          <label class="btn btn-ghost file-btn"><span aria-hidden="true">↑</span> Import
             <input id="importInput" type="file" accept="application/json" hidden />
           </label>
-          <button id="clearBtn" type="button" class="btn btn-ghost btn-ghost-danger">Clear all</button>
+          <button id="clearBtn" type="button" class="btn btn-ghost btn-ghost-danger">Clear list</button>
         </div>
       </div>
 
-      <table class="list-table">
+      <div class="list-toolbar">
+        <label class="search-box" for="searchInput">
+          <span aria-hidden="true">⌕</span>
+          <input id="searchInput" type="search" placeholder="Search by channel, handle, or ID" autocomplete="off" />
+        </label>
+        <label class="sort-control">Sort
+          <select id="sortSelect" aria-label="Sort blocked channels">
+            <option value="newest">Recently added</option>
+            <option value="oldest">Oldest added</option>
+            <option value="name">Name A–Z</option>
+          </select>
+        </label>
+      </div>
+      <p id="listSummary" class="list-summary" aria-live="polite"></p>
+
+      <div class="table-scroll">
+      <table id="listTable" class="list-table">
         <thead>
           <tr>
             <th>Channel</th>
             <th>Match type</th>
             <th>Value</th>
             <th>Added</th>
-            <th></th>
+            <th><span class="sr-only">Actions</span></th>
           </tr>
         </thead>
         <tbody id="tableBody"></tbody>
       </table>
-      <p id="emptyState" class="empty-state">Nothing blocked yet.</p>
+      </div>
+      <div id="emptyState" class="empty-state">
+        <span class="empty-icon" aria-hidden="true">⌕</span>
+        <strong id="emptyTitle">Nothing blocked yet</strong>
+        <span id="emptyHint">Add a channel above and it will appear here.</span>
+      </div>
     </section>
+    <div id="statusMsg" class="status-toast" role="status" aria-live="polite" hidden></div>
   </div>
 
   <script src="common.js"></script>

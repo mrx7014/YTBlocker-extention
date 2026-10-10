@@ -39,6 +39,11 @@ The full options page provides the blocklist manager, matching-type controls, im
 
 - When a blocked channel's watch page is opened, stop and mute its video even if YouTube tries to start or replace the player after the notice appears. Restore the previous volume/mute state when unblocked.
 
+## What's new in 1.2.0
+
+- Refresh the options page with live search, sorting, responsive channel-list controls, clearer feedback, and safer blocklist imports.
+- Keep the settings list synchronized when the blocklist changes in another browser window or device.
+
 ## Installation for development
 
 1. Clone or download this repository.
@@ -114,7 +119,7 @@ The resulting archive can be uploaded to a release or shared as an unpacked-exte
 
 Every push to `main` and every pull request runs the GitHub Actions workflow. The workflow validates the manifests, checks JavaScript syntax with Node.js, verifies the required files, and builds separate desktop and Android packages.
 
-To download a build, open the completed workflow run on GitHub. In the **Artifacts** section, download either `youtube-channel-blocker-desktop-v1.1.1` or `youtube-channel-blocker-android-v1.1.1`; each contains that platform's ZIP package.
+To download a build, open the completed workflow run on GitHub. In the **Artifacts** section, download either `youtube-channel-blocker-desktop-v1.2.0` or `youtube-channel-blocker-android-v1.2.0`; each contains that platform's ZIP package.
 
 ## Privacy and permissions
 
