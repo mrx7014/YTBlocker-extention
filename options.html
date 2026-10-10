@@ -50,13 +50,19 @@
           <div><h2>Blocked channels</h2><p><span id="countBadge">0</span> channels in your list</p></div>
         </div>
         <div class="panel-actions">
+          <label class="sr-only" for="exportFormat">Export format</label>
+          <select id="exportFormat" class="btn btn-ghost format-select" aria-label="Export format">
+            <option value="json">JSON</option>
+            <option value="csv">CSV</option>
+          </select>
           <button id="exportBtn" type="button" class="btn btn-ghost"><span aria-hidden="true">↓</span> Export</button>
           <label class="btn btn-ghost file-btn"><span aria-hidden="true">↑</span> Import
-            <input id="importInput" type="file" accept="application/json" hidden />
+            <input id="importInput" type="file" accept=".json,.csv,application/json,text/csv" hidden />
           </label>
           <button id="clearBtn" type="button" class="btn btn-ghost btn-ghost-danger">Clear list</button>
         </div>
       </div>
+      <p class="transfer-hint">Choose JSON or CSV to export. Imports detect the format from the selected file.</p>
 
       <div class="list-toolbar">
         <label class="search-box" for="searchInput">

@@ -13,6 +13,7 @@
   const listSummary = document.getElementById('listSummary');
   const searchInput = document.getElementById('searchInput');
   const sortSelect = document.getElementById('sortSelect');
+  const exportFormat = document.getElementById('exportFormat');
   const exportBtn = document.getElementById('exportBtn');
   const importInput = document.getElementById('importInput');
   const clearBtn = document.getElementById('clearBtn');
@@ -204,6 +205,77 @@
   searchInput.addEventListener('input', () => render(entries));
   sortSelect.addEventListener('change', () => render(entries));
 
+  function csvEscape(value) {
+    return '"' + String(value == null ? '' : value).replace(/"/g, '""') + '"';
+  }
+
+  function makeCsv(list) {
+    const columns = ['type', 'value', 'label', 'addedAt'];
+    const lines = [columns.join(',')];
+    for (const entry of list) {
+      lines.push(columns.map((column) => csvEscape(entry[column])).join(','));
+    }
+    return '\uFEFF' + lines.join('\r\n') + '\r\n';
+  }
+
+  function parseCsv(text) {
+    const rows = [];
+    let row = [];
+    let field = '';
+    let quoted = false;
+
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      if (quoted) {
+        if (char === '"' && text[i + 1] === '"') {
+          field += '"';
+          i++;
+        } else if (char === '"') {
+          quoted = false;
+        } else {
+          field += char;
+        }
+      } else if (char === '"' && field === '') {
+        quoted = true;
+      } else if (char === ',') {
+        row.push(field);
+        field = '';
+      } else if (char === '\n' || char === '\r') {
+        row.push(field);
+        rows.push(row);
+        row = [];
+        field = '';
+        if (char === '\r' && text[i + 1] === '\n') i++;
+      } else {
+        field += char;
+      }
+    }
+    if (quoted) throw new Error('Unclosed quoted CSV field');
+    if (field !== '' || row.length) {
+      row.push(field);
+      rows.push(row);
+    }
+    if (!rows.length) throw new Error('Empty CSV file');
+
+    const headers = rows.shift().map((header) =>
+      String(header).replace(/^\uFEFF/, '').trim().toLowerCase()
+    );
+    const typeIndex = headers.indexOf('type');
+    const valueIndex = headers.indexOf('value');
+    if (typeIndex < 0 || valueIndex < 0) {
+      throw new Error('CSV must include type and value columns');
+    }
+    const labelIndex = headers.indexOf('label');
+    const addedAtIndex = headers.indexOf('addedat');
+
+    return rows.filter((cells) => cells.some((cell) => cell.trim() !== '')).map((cells) => ({
+      type: cells[typeIndex],
+      value: cells[valueIndex],
+      label: labelIndex >= 0 ? cells[labelIndex] : '',
+      addedAt: addedAtIndex >= 0 ? cells[addedAtIndex] : ''
+    }));
+  }
+
   exportBtn.addEventListener('click', async () => {
     try {
       const { list } = await ycbGetState();
@@ -211,14 +283,17 @@
         showStatus('There are no blocked channels to export.', true);
         return;
       }
-      const blob = new Blob([JSON.stringify(list, null, 2)], { type: 'application/json' });
+      const format = exportFormat.value === 'csv' ? 'csv' : 'json';
+      const contents = format === 'csv' ? makeCsv(list) : JSON.stringify(list, null, 2);
+      const mimeType = format === 'csv' ? 'text/csv;charset=utf-8' : 'application/json';
+      const blob = new Blob([contents], { type: mimeType });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'youtube-channel-blocklist.json';
+      link.download = `youtube-channel-blocklist.${format}`;
       link.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
-      showStatus(`${list.length} ${list.length === 1 ? 'channel' : 'channels'} exported.`);
+      showStatus(`${list.length} ${list.length === 1 ? 'channel' : 'channels'} exported as ${format.toUpperCase()}.`);
     } catch (error) {
       showStatus('Could not export the blocklist.', true);
     }
@@ -243,7 +318,9 @@
     const file = importInput.files && importInput.files[0];
     if (!file) return;
     try {
-      const parsed = JSON.parse(await file.text());
+      const isCsv = file.name.toLowerCase().endsWith('.csv');
+      const text = await file.text();
+      const parsed = isCsv ? parseCsv(text) : JSON.parse(text);
       if (!Array.isArray(parsed)) throw new Error('Expected a JSON array');
       const { list: current } = await ycbGetState();
       const seen = new Set(current.map(ycbEntryKey));
@@ -261,9 +338,10 @@
 
       await chrome.storage.sync.set({ [YCB_STORAGE_KEY]: merged });
       render(merged);
-      showStatus(`${merged.length - current.length} added; ${skipped} invalid or duplicate entries skipped.`);
+      const format = isCsv ? 'CSV' : 'JSON';
+      showStatus(`${merged.length - current.length} added from ${format}; ${skipped} invalid or duplicate entries skipped.`);
     } catch (error) {
-      showStatus('Could not import that file. Choose a JSON blocklist exported by this extension.', true);
+      showStatus('Could not import that file. Choose a valid JSON or CSV blocklist.', true);
     } finally {
       importInput.value = '';
     }

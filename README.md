@@ -44,6 +44,11 @@ The full options page provides the blocklist manager, matching-type controls, im
 - Refresh the options page with live search, sorting, responsive channel-list controls, clearer feedback, and safer blocklist imports.
 - Keep the settings list synchronized when the blocklist changes in another browser window or device.
 
+## What's new in 1.3.0
+
+- Export the blocklist as either JSON or CSV, and import either format by selecting the file.
+- CSV exports quote and escape values, preserving commas, quotes, and line breaks in channel names.
+
 ## Installation for development
 
 1. Clone or download this repository.
@@ -119,7 +124,7 @@ The resulting archive can be uploaded to a release or shared as an unpacked-exte
 
 Every push to `main` and every pull request runs the GitHub Actions workflow. The workflow validates the manifests, checks JavaScript syntax with Node.js, verifies the required files, and builds separate desktop and Android packages.
 
-To download a build, open the completed workflow run on GitHub. In the **Artifacts** section, download either `youtube-channel-blocker-desktop-v1.2.0` or `youtube-channel-blocker-android-v1.2.0`; each contains that platform's ZIP package.
+To download a build, open the completed workflow run on GitHub. In the **Artifacts** section, download either `youtube-channel-blocker-desktop-v1.3.0` or `youtube-channel-blocker-android-v1.3.0`; each contains that platform's ZIP package.
 
 ## Privacy and permissions
 

@@ -250,6 +250,8 @@ body {
 .btn-primary { min-height: 42px; padding: 0 16px; background: #294a80; border-color: #4778c9; color: #f4f7ff; white-space: nowrap; }
 .btn-primary:hover { background: #355e9f; }
 .btn-ghost { background: #20232a; border-color: #343843; color: #c7cbd3; }
+.format-select { min-height: 38px; padding: 0 28px 0 10px; background: #20232a; color: #c7cbd3; cursor: pointer; }
+.transfer-hint { margin: -8px 0 12px; color: #818996; font-size: 10.5px; text-align: right; }
 .btn-ghost:hover { background: #282b34; color: #fff; }
 .btn-ghost-danger:hover { color: #ff7182; border-color: #a23e4b; background: rgba(255, 82, 104, .08); }
 .hint { margin-top: 12px; font-size: 11.5px; }
