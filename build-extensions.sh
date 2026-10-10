@@ -36,7 +36,7 @@ build_web() {
   copy_extension_files "$package_dir"
   cp "$ROOT_DIR/platforms/web/manifest.json" "$package_dir/manifest.json"
   cp "$ROOT_DIR/background.js" "$package_dir/background.js"
-  (cd "$package_dir" && zip -q -r "$DIST_DIR/youtube-channel-blocker-web-v${VERSION}.zip" .)
+  (cd "$package_dir" && zip -q -r "$DIST_DIR/youtube-channel-blocker-desktop-v${VERSION}.zip" .)
 }
 
 build_android() {
@@ -48,7 +48,7 @@ build_android() {
 }
 
 mkdir -p "$DIST_DIR"
-rm -f "$DIST_DIR/youtube-channel-blocker-web-v${VERSION}.zip" \
+rm -f "$DIST_DIR/youtube-channel-blocker-desktop-v${VERSION}.zip" \
       "$DIST_DIR/youtube-channel-blocker-android-v${VERSION}.zip"
 
 python3 -m json.tool "$ROOT_DIR/platforms/web/manifest.json" >/dev/null
@@ -59,5 +59,5 @@ build_web
 build_android
 
 echo "Built:"
-ls -lh "$DIST_DIR/youtube-channel-blocker-web-v${VERSION}.zip" \
+ls -lh "$DIST_DIR/youtube-channel-blocker-desktop-v${VERSION}.zip" \
        "$DIST_DIR/youtube-channel-blocker-android-v${VERSION}.zip"

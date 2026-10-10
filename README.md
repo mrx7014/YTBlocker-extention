@@ -108,9 +108,9 @@ The resulting archive can be uploaded to a release or shared as an unpacked-exte
 
 ## Automated builds
 
-Every push to `main` and every pull request runs the GitHub Actions workflow. The workflow validates `manifest.json`, checks JavaScript syntax with Node.js, verifies the required files, and uploads `youtube-channel-blocker.zip` as a build artifact.
+Every push to `main` and every pull request runs the GitHub Actions workflow. The workflow validates the manifests, checks JavaScript syntax with Node.js, verifies the required files, and builds separate desktop and Android packages.
 
-To download a build, open the completed workflow run on GitHub and download the artifact from the **Artifacts** section.
+To download a build, open the completed workflow run on GitHub. In the **Artifacts** section, download either `youtube-channel-blocker-desktop-v1.1.0` or `youtube-channel-blocker-android-v1.1.0`; each contains that platform's ZIP package.
 
 ## Privacy and permissions
 

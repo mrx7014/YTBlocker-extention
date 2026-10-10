@@ -73,12 +73,18 @@ jobs:
       - name: Build both extension packages
         run: bash build-extensions.sh
 
-      - name: Upload extension artifacts
+      - name: Upload desktop extension
         uses: actions/upload-artifact@v4
         with:
-          name: youtube-channel-blocker-v1.1.0
-          path: |
-            dist/youtube-channel-blocker-web-v1.1.0.zip
-            dist/youtube-channel-blocker-android-v1.1.0.zip
+          name: youtube-channel-blocker-desktop-v1.1.0
+          path: dist/youtube-channel-blocker-desktop-v1.1.0.zip
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload Android extension
+        uses: actions/upload-artifact@v4
+        with:
+          name: youtube-channel-blocker-android-v1.1.0
+          path: dist/youtube-channel-blocker-android-v1.1.0.zip
           if-no-files-found: error
           retention-days: 30
