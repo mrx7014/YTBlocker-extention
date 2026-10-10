@@ -22,7 +22,7 @@ The full options page provides the blocklist manager, matching-type controls, im
 - Hide blocked content from feeds, search results, watch pages, channel pages, playlists, Shorts-related cards, and comments.
 - Replace a blocked channel's direct channel, Videos, Shorts, Live, and Community pages with a blocked notice.
 - Hide supported post/video cards that link to a blocked channel, including cards that mention a blocked channel as a collaborator.
-- Replace a blocked channel's watch-page player with a clear notice and an **Unblock and watch** action.
+- Replace a blocked channel's watch-page player with a clear notice and an **Unblock and watch** action; pause and mute playback while it is blocked.
 - Block channels through the toolbar popup, a right-click context menu, or a hover action on supported cards.
 - Add a channel link, handle, ID, or name manually.
 - Manage, remove, import, and export blocked channels from the options page.
@@ -34,6 +34,10 @@ The full options page provides the blocklist manager, matching-type controls, im
 - Blocked channel profile pages, including their Videos, Shorts, Live, and Community tabs, are replaced by a blocked notice with an unblock action.
 - Supported video and post cards are hidden when they contain a link identifying a blocked channel, including some collaboration cards.
 - Collaboration cards without a visible channel link or identity may not be detectable.
+
+## What's new in 1.1.1
+
+- When a blocked channel's watch page is opened, stop and mute its video even if YouTube tries to start or replace the player after the notice appears. Restore the previous volume/mute state when unblocked.
 
 ## Installation for development
 
@@ -110,7 +114,7 @@ The resulting archive can be uploaded to a release or shared as an unpacked-exte
 
 Every push to `main` and every pull request runs the GitHub Actions workflow. The workflow validates the manifests, checks JavaScript syntax with Node.js, verifies the required files, and builds separate desktop and Android packages.
 
-To download a build, open the completed workflow run on GitHub. In the **Artifacts** section, download either `youtube-channel-blocker-desktop-v1.1.0` or `youtube-channel-blocker-android-v1.1.0`; each contains that platform's ZIP package.
+To download a build, open the completed workflow run on GitHub. In the **Artifacts** section, download either `youtube-channel-blocker-desktop-v1.1.1` or `youtube-channel-blocker-android-v1.1.1`; each contains that platform's ZIP package.
 
 ## Privacy and permissions
 

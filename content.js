@@ -37,6 +37,9 @@
   let blockList = [];
   let enabled = true;
   let listVersion = 0;
+  let blockedWatchPage = false;
+  const blockedVideoStates = new WeakMap();
+  const blockedPlayerStates = new WeakMap();
 
   function normalizedList() {
     return blockList.map((e) => ({ type: e.type, value: e.value.toLowerCase() }));
@@ -302,11 +305,90 @@
   }
 
   function removeOverlay() {
+    blockedWatchPage = false;
     const existing = document.querySelector('.ycb-overlay');
     if (existing) existing.remove();
     const player = document.querySelector('#player, #movie_player');
     if (player) player.style.removeProperty('visibility');
+
+    document.querySelectorAll('video').forEach((video) => {
+      const state = blockedVideoStates.get(video);
+      if (!state) return;
+      video.muted = state.muted;
+      video.volume = state.volume;
+      video.autoplay = state.autoplay;
+      blockedVideoStates.delete(video);
+    });
+    document.querySelectorAll('#movie_player').forEach((playerEl) => {
+      const state = blockedPlayerStates.get(playerEl);
+      if (!state) return;
+      try {
+        if (Number.isFinite(state.volume) && typeof playerEl.setVolume === 'function') {
+          playerEl.setVolume(state.volume);
+        }
+        if (state.muted && typeof playerEl.mute === 'function') playerEl.mute();
+        else if (!state.muted && typeof playerEl.unMute === 'function') playerEl.unMute();
+      } catch (_) { /* YouTube may replace the player during navigation. */ }
+      blockedPlayerStates.delete(playerEl);
+    });
   }
+
+  function suppressBlockedPlayback() {
+    if (!blockedWatchPage) return;
+
+    document.querySelectorAll('video').forEach((video) => {
+      if (!blockedVideoStates.has(video)) {
+        blockedVideoStates.set(video, {
+          muted: video.muted,
+          volume: video.volume,
+          autoplay: video.autoplay
+        });
+      }
+      video.autoplay = false;
+      video.pause();
+      video.muted = true;
+      video.volume = 0;
+    });
+
+    const player = document.querySelector('#movie_player');
+    if (player) {
+      if (!blockedPlayerStates.has(player)) {
+        let volume = null;
+        let muted = false;
+        try {
+          if (typeof player.getVolume === 'function') volume = player.getVolume();
+          if (typeof player.isMuted === 'function') muted = player.isMuted();
+        } catch (_) { /* Player API is not ready yet. */ }
+        blockedPlayerStates.set(player, { volume, muted });
+      }
+      try {
+        if (typeof player.pauseVideo === 'function') player.pauseVideo();
+        if (typeof player.mute === 'function') player.mute();
+        if (typeof player.setVolume === 'function') player.setVolume(0);
+      } catch (_) { /* Retry on the next player/video event. */ }
+    }
+  }
+
+  function guardBlockedVideoEvent(event) {
+    if (!blockedWatchPage || !(event.target instanceof HTMLVideoElement)) return;
+    const video = event.target;
+    if (!blockedVideoStates.has(video)) {
+      blockedVideoStates.set(video, {
+        muted: video.muted,
+        volume: video.volume,
+        autoplay: video.autoplay
+      });
+    }
+    video.pause();
+    video.muted = true;
+    video.volume = 0;
+  }
+
+  // YouTube can start or replace the media element after the first pause.
+  // Catch those attempts in capture phase and re-apply pause + mute.
+  document.addEventListener('play', guardBlockedVideoEvent, true);
+  document.addEventListener('playing', guardBlockedVideoEvent, true);
+  document.addEventListener('volumechange', guardBlockedVideoEvent, true);
 
   function showOverlay(entry, label) {
     if (document.querySelector('.ycb-overlay')) return;
@@ -342,8 +424,6 @@
 
     container.appendChild(overlay);
 
-    const video = document.querySelector('video');
-    if (video) video.pause();
   }
 
   function checkWatchPage() {
@@ -354,11 +434,17 @@
     const owner = document.querySelector(
       'ytd-video-owner-renderer, #owner, ytd-watch-metadata #owner'
     );
-    if (!owner) return;
+    if (!owner) {
+      suppressBlockedPlayback();
+      return;
+    }
     const info = extractChannelInfo(owner);
     const entry = matchEntry(info);
-    if (entry) showOverlay(entry, info.name);
-    else removeOverlay();
+    blockedWatchPage = !!entry;
+    if (entry) {
+      showOverlay(entry, info.name);
+      suppressBlockedPlayback();
+    } else removeOverlay();
   }
 
   function rescanAll() {
