@@ -33,14 +33,24 @@
   const CHANNEL_NAME_SELECTOR =
     '#channel-name #text, ytd-channel-name #text, #text.ytd-channel-name, ' +
     '.yt-lockup-metadata-view-model__text, #author-text span, #channel-name';
+  const VIDEO_TITLE_SELECTOR =
+    'a#video-title, #video-title, .yt-lockup-metadata-view-model__title, ' +
+    'yt-lockup-metadata-view-model__title, a[href^="/watch"], a[href*="youtube.com/watch"]';
+  const TITLE_FILTER_RENDERER_SELECTOR = [
+    'ytd-rich-item-renderer', 'ytd-video-renderer', 'ytd-compact-video-renderer',
+    'ytd-grid-video-renderer', 'ytd-reel-item-renderer', 'ytd-rich-grid-media',
+    'yt-lockup-view-model', 'ytm-video-with-context-renderer'
+  ].join(',');
 
   let blockList = [];
   let allowedList = [];
   let enabled = true;
   let filterMode = 'hide';
+  let titleKeywords = [];
   let listVersion = 0;
   let expiryTimer = null;
   let blockedWatchPage = false;
+  const allowedVideoIds = new Set();
   const blockedVideoStates = new WeakMap();
   const blockedPlayerStates = new WeakMap();
 
@@ -75,6 +85,31 @@
     }
 
     return { id, handle, name };
+  }
+
+  function extractVideoTitle(scopeEl) {
+    if (!scopeEl || !scopeEl.querySelector) return '';
+    const titleEl = scopeEl.querySelector(VIDEO_TITLE_SELECTOR);
+    if (!titleEl) return '';
+    return (titleEl.getAttribute('title') || titleEl.textContent || '').trim();
+  }
+
+  function matchTitleKeywordInCard(renderer) {
+    if (!enabled || titleKeywords.length === 0 || !renderer.matches(TITLE_FILTER_RENDERER_SELECTOR)) return null;
+    return ycbMatchTitleKeyword(extractVideoTitle(renderer), titleKeywords);
+  }
+
+  function currentVideoId() {
+    try { return new URL(location.href).searchParams.get('v') || ''; }
+    catch (_) { return ''; }
+  }
+
+  function currentWatchTitle() {
+    const title = document.querySelector(
+      'ytd-watch-metadata h1, ytd-video-primary-info-renderer h1, #title h1, h1.title'
+    );
+    const text = title && title.textContent ? title.textContent.trim() : '';
+    return text;
   }
 
   function matchEntry(info) {
@@ -240,6 +275,17 @@
     renderer.style.setProperty('display', 'none', 'important');
   }
 
+  function setKeywordHidden(renderer, rule) {
+    if (rule) {
+      recordFiltered(renderer);
+      renderer.setAttribute('data-ycb-keyword-hidden', '1');
+      renderer.style.setProperty('display', 'none', 'important');
+    } else if (renderer.getAttribute('data-ycb-keyword-hidden') === '1') {
+      renderer.removeAttribute('data-ycb-keyword-hidden');
+      renderer.style.removeProperty('display');
+    }
+  }
+
   function removeDialog() {
     const existing = document.querySelector('.ycb-dialog');
     if (existing) existing.remove();
@@ -371,7 +417,14 @@
 
     const info = extractChannelInfo(renderer);
     const entry = matchAnyChannelIn(renderer);
-    setHidden(renderer, entry);
+    const keywordRule = matchTitleKeywordInCard(renderer);
+    if (entry) {
+      setKeywordHidden(renderer, null);
+      setHidden(renderer, entry);
+    } else {
+      setHidden(renderer, null);
+      setKeywordHidden(renderer, keywordRule);
+    }
     if (!entry) attachBlockButton(renderer, info);
   }
 
@@ -469,7 +522,10 @@
   document.addEventListener('volumechange', guardBlockedVideoEvent, true);
 
   function showOverlay(entry, label) {
-    if (document.querySelector('.ycb-overlay')) return;
+    const overlayKey = entry.type + ':' + entry.value;
+    const existing = document.querySelector('.ycb-overlay');
+    if (existing && existing.dataset.ycbKey === overlayKey) return;
+    if (existing) existing.remove();
     const container = document.querySelector('#player, #movie_player, ytd-watch-flexy #player-container-inner');
     if (!container) return;
 
@@ -484,20 +540,28 @@
     icon.className = 'ycb-overlay-icon';
     const title = document.createElement('p');
     title.className = 'ycb-overlay-title';
-    title.textContent = 'This channel is blocked';
+    title.textContent = entry.type === 'keyword' ? 'This video matches a title keyword' : 'This channel is blocked';
     const subtitle = document.createElement('p');
     subtitle.className = 'ycb-overlay-sub';
     subtitle.textContent = label || entry.value;
     const unblockButton = document.createElement('button');
     unblockButton.type = 'button';
     unblockButton.className = 'ycb-overlay-btn';
-    unblockButton.textContent = 'Unblock and watch';
+    unblockButton.textContent = entry.type === 'keyword' ? 'View this video anyway' : 'Unblock and watch';
     card.append(icon, title, subtitle, unblockButton);
     overlay.appendChild(card);
+    overlay.dataset.ycbKey = overlayKey;
 
     unblockButton.addEventListener('click', async () => {
-      await ycbRemoveEntry(entry);
-      removeOverlay();
+      if (entry.type === 'keyword') {
+        const videoId = currentVideoId();
+        if (videoId) allowedVideoIds.add(videoId);
+        removeOverlay();
+        checkWatchPage();
+      } else {
+        await ycbRemoveEntry(entry);
+        removeOverlay();
+      }
     });
 
     container.appendChild(overlay);
@@ -512,15 +576,23 @@
     const owner = document.querySelector(
       'ytd-video-owner-renderer, #owner, ytd-watch-metadata #owner'
     );
-    if (!owner) {
+    const info = owner ? extractChannelInfo(owner) : { id: null, handle: null, name: null };
+    const channelEntry = matchEntry(info);
+    if (channelEntry) {
+      blockedWatchPage = true;
+      showOverlay(channelEntry, info.name);
       suppressBlockedPlayback();
       return;
     }
-    const info = extractChannelInfo(owner);
-    const entry = matchEntry(info);
-    blockedWatchPage = !!entry;
-    if (entry) {
-      showOverlay(entry, info.name);
+
+    const videoId = currentVideoId();
+    const keywordRule = enabled && titleKeywords.length > 0 && (!videoId || !allowedVideoIds.has(videoId))
+      ? ycbMatchTitleKeyword(currentWatchTitle(), titleKeywords)
+      : null;
+    if (keywordRule) {
+      const videoEntry = { type: 'keyword', value: keywordRule.value };
+      blockedWatchPage = true;
+      showOverlay(videoEntry, keywordRule.value);
       suppressBlockedPlayback();
     } else removeOverlay();
   }
@@ -536,6 +608,7 @@
     const state = await ycbGetState();
     blockList = state.list;
     allowedList = state.allowed;
+    titleKeywords = state.keywords;
     enabled = state.enabled;
     filterMode = state.mode;
     scheduleExpiryRefresh();
@@ -554,12 +627,21 @@
 
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'sync') return;
-    if (changes[YCB_STORAGE_KEY] || changes[YCB_ALLOWED_KEY] || changes[YCB_ENABLED_KEY] || changes[YCB_MODE_KEY]) refreshState();
+    if (changes[YCB_STORAGE_KEY] || changes[YCB_ALLOWED_KEY] || changes[YCB_ENABLED_KEY] || changes[YCB_MODE_KEY] || changes[YCB_KEYWORDS_KEY]) refreshState();
   });
 
   const observer = new MutationObserver((mutations) => {
     let touched = false;
     for (const m of mutations) {
+      if (m.type === 'characterData') {
+        const renderer = m.target.parentElement && m.target.parentElement.closest(RENDERER_SELECTOR);
+        if (renderer) {
+          renderer.removeAttribute('data-ycb-v');
+          processRenderer(renderer);
+        }
+        touched = true;
+        continue;
+      }
       for (const node of m.addedNodes) {
         if (node.nodeType !== 1) continue;
         scan(node);
@@ -579,7 +661,7 @@
 
   function start() {
     refreshState().then(() => {
-      observer.observe(document.documentElement, { childList: true, subtree: true });
+      observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true });
     });
     document.addEventListener('yt-navigate-finish', () => rescanAll());
   }

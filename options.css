@@ -384,3 +384,19 @@ button:focus-visible, select:focus-visible, .file-btn:focus-within { outline: 2p
 
 .edit-meta-btn { margin-right: 4px; border: 1px solid #38404d; border-radius: 6px; padding: 5px 7px; background: transparent; color: #9db7df; font: inherit; font-size: 9.5px; cursor: pointer; }
 .edit-meta-btn:hover { border-color: #668bc5; background: rgba(121,167,255,.08); }
+
+
+/* Title-keyword video filter. */
+.section-icon-keyword { color: #d6b57c; border-color: rgba(214,181,124,.22); background: rgba(214,181,124,.08); }
+.keyword-add-row { display: grid; grid-template-columns: minmax(180px, 1fr) 190px auto; gap: 9px; margin-top: 18px; }
+.keyword-add-row input, .keyword-add-row select { min-width: 0; min-height: 40px; padding: 0 11px; border: 1px solid #333844; border-radius: 8px; background: #12141a; color: var(--text); font: inherit; font-size: 11px; }
+.keyword-add-row input:focus, .keyword-add-row select:focus { outline: none; border-color: var(--positive); box-shadow: 0 0 0 3px rgba(121,167,255,.12); }
+.keyword-add-row .btn { min-height: 40px; }
+.keyword-count { margin: 15px 0 8px; color: var(--text-dim); font-size: 10.5px; }
+.keyword-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.keyword-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; padding: 9px 10px; border: 1px solid rgba(255,255,255,.07); border-radius: 8px; background: rgba(255,255,255,.02); }
+.keyword-main { display: flex; flex-direction: column; min-width: 0; gap: 3px; }
+.keyword-main strong { overflow: hidden; color: #e8dcc4; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.keyword-main span { color: #89919e; font-size: 10px; }
+@media (max-width: 760px) { .keyword-add-row { grid-template-columns: 1fr 1fr; } .keyword-add-row input { grid-column: 1 / -1; } .keyword-add-row .btn { grid-column: 2; } .keyword-list { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .keyword-add-row { grid-template-columns: 1fr; } .keyword-add-row input, .keyword-add-row select, .keyword-add-row .btn { grid-column: 1; } }

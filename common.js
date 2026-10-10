@@ -9,6 +9,7 @@ const YCB_ENABLED_KEY = 'enabled';
 const YCB_ALLOWED_KEY = 'allowedChannels';
 const YCB_MODE_KEY = 'filterMode';
 const YCB_STATS_KEY = 'filteredCount';
+const YCB_KEYWORDS_KEY = 'titleKeywords';
 
 const YCB_ID_PATTERN = /UC[A-Za-z0-9_-]{22}/;
 const YCB_HANDLE_PATTERN = /@[A-Za-z0-9._-]{3,30}/;
@@ -42,6 +43,23 @@ function ycbEntryKey(entry) {
   return entry.type + ':' + entry.value.toLowerCase();
 }
 
+function ycbMatchTitleKeyword(title, rules) {
+  if (!title || !Array.isArray(rules)) return null;
+  const text = String(title).toLowerCase();
+  for (const rule of rules) {
+    const keyword = String(rule && rule.value || '').trim();
+    if (!keyword) continue;
+    if (rule.match === 'whole') {
+      const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const pattern = new RegExp('(^|[^\\p{L}\\p{N}_])' + escaped + '($|[^\\p{L}\\p{N}_])', 'iu');
+      if (pattern.test(String(title))) return rule;
+    } else if (text.includes(keyword.toLowerCase())) {
+      return rule;
+    }
+  }
+  return null;
+}
+
 function ycbParseChannelFromUrl(urlString) {
   try {
     const u = new URL(urlString);
@@ -61,7 +79,7 @@ function ycbParseChannelFromUrl(urlString) {
 
 async function ycbGetState() {
   const res = await chrome.storage.sync.get([
-    YCB_STORAGE_KEY, YCB_ENABLED_KEY, YCB_ALLOWED_KEY, YCB_MODE_KEY
+    YCB_STORAGE_KEY, YCB_ENABLED_KEY, YCB_ALLOWED_KEY, YCB_MODE_KEY, YCB_KEYWORDS_KEY
   ]);
   const storedList = Array.isArray(res[YCB_STORAGE_KEY]) ? res[YCB_STORAGE_KEY] : [];
   const now = Date.now();
@@ -72,6 +90,7 @@ async function ycbGetState() {
   return {
     list,
     allowed: Array.isArray(res[YCB_ALLOWED_KEY]) ? res[YCB_ALLOWED_KEY] : [],
+    keywords: Array.isArray(res[YCB_KEYWORDS_KEY]) ? res[YCB_KEYWORDS_KEY] : [],
     enabled: res[YCB_ENABLED_KEY] !== false,
     mode: res[YCB_MODE_KEY] === 'placeholder' ? 'placeholder' : 'hide'
   };
@@ -105,5 +124,5 @@ async function ycbRemoveEntry(entry, storageKey) {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { ycbNormalizeInput, ycbEntryKey, ycbParseChannelFromUrl };
+  module.exports = { ycbNormalizeInput, ycbEntryKey, ycbParseChannelFromUrl, ycbMatchTitleKeyword };
 }

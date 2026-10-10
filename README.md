@@ -60,6 +60,12 @@ The full options page provides the blocklist manager, matching-type controls, im
 - Warn before using approximate channel-name matching and recommend an ID or @handle for precision.
 - Show an approximate count of filtered items. This statistic is stored locally in the browser and can be reset.
 
+## What's new in 1.5.0
+
+- Add case-insensitive title-keyword filters using either substring/phrase matching or whole-word matching.
+- Hide only the matching video card; the channel and its other videos remain available. On a matching watch page, playback is paused and muted behind a video-specific notice with a “view anyway” option.
+- Keyword rules sync with the browser profile and can be managed from the settings page.
+
 ## Installation for development
 
 1. Clone or download this repository.
@@ -135,7 +141,7 @@ The resulting archive can be uploaded to a release or shared as an unpacked-exte
 
 Every push to `main` and every pull request runs the GitHub Actions workflow. The workflow validates the manifests, checks JavaScript syntax with Node.js, verifies the required files, and builds separate desktop and Android packages.
 
-To download a build, open the completed workflow run on GitHub. In the **Artifacts** section, download either `youtube-channel-blocker-desktop-v1.4.0` or `youtube-channel-blocker-android-v1.4.0`; each contains that platform's ZIP package.
+To download a build, open the completed workflow run on GitHub. In the **Artifacts** section, download either `youtube-channel-blocker-desktop-v1.5.0` or `youtube-channel-blocker-android-v1.5.0`; each contains that platform's ZIP package.
 
 ## Privacy and permissions
 

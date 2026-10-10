@@ -35,10 +35,17 @@
   const allowCount = document.getElementById('allowCount');
   const allowList = document.getElementById('allowList');
   const allowEmpty = document.getElementById('allowEmpty');
+  const keywordInput = document.getElementById('keywordInput');
+  const keywordMatch = document.getElementById('keywordMatch');
+  const keywordAddBtn = document.getElementById('keywordAddBtn');
+  const keywordCount = document.getElementById('keywordCount');
+  const keywordList = document.getElementById('keywordList');
+  const keywordEmpty = document.getElementById('keywordEmpty');
   const statusMsg = document.getElementById('statusMsg');
 
   let entries = [];
   let allowedEntries = [];
+  let keywordRules = [];
   let selectedKeys = new Set();
   let statusTimer = null;
   let expiryTimer = null;
@@ -291,6 +298,42 @@
     }
   }
 
+  function renderKeywordRules(list) {
+    keywordRules = Array.isArray(list) ? list.filter((rule) => rule && typeof rule.value === 'string' && rule.value.trim()) : [];
+    keywordCount.textContent = String(keywordRules.length);
+    keywordList.replaceChildren();
+    keywordEmpty.hidden = keywordRules.length > 0;
+    for (const rule of keywordRules) {
+      const item = document.createElement('li');
+      item.className = 'keyword-item';
+      const main = document.createElement('div');
+      main.className = 'keyword-main';
+      const value = document.createElement('strong');
+      value.textContent = rule.value;
+      const mode = document.createElement('span');
+      mode.textContent = rule.match === 'whole' ? 'Whole word or phrase' : 'Contains phrase';
+      main.append(value, mode);
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'remove-btn';
+      remove.textContent = '−';
+      remove.title = `Remove keyword ${rule.value}`;
+      remove.setAttribute('aria-label', remove.title);
+      remove.addEventListener('click', async () => {
+        const updated = keywordRules.filter((candidate) =>
+          !(candidate.value.toLowerCase() === rule.value.toLowerCase() && candidate.match === rule.match)
+        );
+        try {
+          await chrome.storage.sync.set({ [YCB_KEYWORDS_KEY]: updated });
+          renderKeywordRules(updated);
+          showStatus(`Keyword “${rule.value}” removed.`);
+        } catch (_) { showStatus('Could not remove that keyword.', true); }
+      });
+      item.append(main, remove);
+      keywordList.appendChild(item);
+    }
+  }
+
   function scheduleExpiry(list) {
     clearTimeout(expiryTimer);
     const next = list.reduce((soonest, entry) => {
@@ -324,6 +367,7 @@
       filterModeToggle.value = state.mode || 'hide';
       renderBlocked(state.list);
       renderAllowed(state.allowed);
+      renderKeywordRules(state.keywords);
       updateStats();
     } catch (error) {
       showStatus('Could not load settings. Reload this page to try again.', true);
@@ -576,6 +620,29 @@
   });
   allowInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') allowAddBtn.click(); });
 
+  keywordAddBtn.addEventListener('click', async () => {
+    const value = keywordInput.value.trim().slice(0, 60);
+    if (!value) { showStatus('Enter a title keyword or phrase first.', true); keywordInput.focus(); return; }
+    if (keywordRules.some((rule) => rule.value.toLowerCase() === value.toLowerCase())) {
+      showStatus('That keyword is already in the filter list.', true);
+      return;
+    }
+    if (keywordRules.length >= 100) { showStatus('The keyword list is full (100 rules maximum).', true); return; }
+    const rule = { value, match: keywordMatch.value === 'whole' ? 'whole' : 'contains' };
+    try {
+      const updated = [...keywordRules, rule];
+      if (new TextEncoder().encode(JSON.stringify(updated)).length > 7000) {
+        showStatus('The keyword list is near the browser sync-storage limit. Remove rules or shorten some phrases.', true);
+        return;
+      }
+      await chrome.storage.sync.set({ [YCB_KEYWORDS_KEY]: updated });
+      keywordInput.value = '';
+      renderKeywordRules(updated);
+      showStatus(`Title keyword “${value}” added.`);
+    } catch (_) { showStatus('Could not save the keyword list. Browser sync storage may be full.', true); }
+  });
+  keywordInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') keywordAddBtn.click(); });
+
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'sync') {
       if (changes[YCB_STORAGE_KEY]) {
@@ -583,6 +650,7 @@
         renderBlocked(updated);
       }
       if (changes[YCB_ALLOWED_KEY]) renderAllowed(Array.isArray(changes[YCB_ALLOWED_KEY].newValue) ? changes[YCB_ALLOWED_KEY].newValue : []);
+      if (changes[YCB_KEYWORDS_KEY]) renderKeywordRules(Array.isArray(changes[YCB_KEYWORDS_KEY].newValue) ? changes[YCB_KEYWORDS_KEY].newValue : []);
       if (changes[YCB_ENABLED_KEY]) {
         enabledToggle.checked = changes[YCB_ENABLED_KEY].newValue !== false;
         enabledLabel.textContent = enabledToggle.checked ? 'On' : 'Off';

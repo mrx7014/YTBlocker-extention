@@ -136,6 +136,25 @@
       </div>
     </section>
 
+    <section class="panel keyword-panel">
+      <div class="section-intro">
+        <span class="section-icon section-icon-keyword" aria-hidden="true">⌕</span>
+        <div><h2>Filter videos by title keywords</h2><p>Only matching video cards (or that exact video on its watch page) are hidden. The channel itself is not blocked.</p></div>
+      </div>
+      <div class="keyword-add-row">
+        <input id="keywordInput" type="text" placeholder="Add a word or phrase" autocomplete="off" maxlength="60" />
+        <select id="keywordMatch" aria-label="Keyword matching mode">
+          <option value="contains">Contains phrase</option>
+          <option value="whole">Whole word or phrase</option>
+        </select>
+        <button id="keywordAddBtn" type="button" class="btn btn-primary">Add keyword</button>
+      </div>
+      <p class="hint">Matching ignores letter case. Whole-word matching does not match the keyword inside a longer word.</p>
+      <p class="keyword-count"><span id="keywordCount">0</span> title keywords</p>
+      <ul id="keywordList" class="keyword-list"></ul>
+      <p id="keywordEmpty" class="allow-empty">No title keywords added.</p>
+    </section>
+
     <div id="statusMsg" class="status-toast" role="status" aria-live="polite" hidden></div>
   </div>
   <script src="common.js"></script>
