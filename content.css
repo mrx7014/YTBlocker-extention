@@ -234,3 +234,42 @@
   font-family: "Roboto", Arial, sans-serif;
   text-align: center;
 }
+
+
+/* Optional placeholder mode for filtered cards. */
+[data-ycb-mode="placeholder"] {
+  min-height: 82px !important;
+  overflow: hidden !important;
+}
+[data-ycb-mode="placeholder"] > *:not(.ycb-filter-placeholder) {
+  visibility: hidden !important;
+}
+.ycb-filter-placeholder {
+  position: absolute;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 82px;
+  padding: 14px;
+  background: #17191e;
+  border: 1px solid #343741;
+  border-radius: 8px;
+  color: #c3c8d1;
+  font: 13px "Roboto", Arial, sans-serif;
+}
+.ycb-filter-placeholder button,
+.ycb-dialog-undo-btn {
+  border: 1px solid #565d6b;
+  border-radius: 6px;
+  padding: 7px 11px;
+  background: #232731;
+  color: #e8ecf3;
+  cursor: pointer;
+  font: 12px "Roboto", Arial, sans-serif;
+}
+.ycb-filter-placeholder button:hover,
+.ycb-dialog-undo-btn:hover { border-color: #79a7ff; color: #a9c5fb; }
+.ycb-dialog-undo-btn { margin: 11px 8px 0 0; }

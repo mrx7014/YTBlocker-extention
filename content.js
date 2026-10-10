@@ -35,8 +35,11 @@
     '.yt-lockup-metadata-view-model__text, #author-text span, #channel-name';
 
   let blockList = [];
+  let allowedList = [];
   let enabled = true;
+  let filterMode = 'hide';
   let listVersion = 0;
+  let expiryTimer = null;
   let blockedWatchPage = false;
   const blockedVideoStates = new WeakMap();
   const blockedPlayerStates = new WeakMap();
@@ -76,6 +79,11 @@
 
   function matchEntry(info) {
     if (!enabled || blockList.length === 0) return null;
+    if (allowedList.some((entry) => {
+      if (entry.type === 'id') return !!info.id && entry.value === info.id;
+      if (entry.type === 'handle') return !!info.handle && entry.value.toLowerCase() === info.handle.toLowerCase();
+      return entry.type === 'name' && !!info.name && entry.value.toLowerCase() === info.name.toLowerCase();
+    })) return null;
     for (const entry of blockList) {
       if (entry.type === 'id' && info.id && entry.value === info.id) return entry;
       if (entry.type === 'handle' && info.handle && entry.value.toLowerCase() === info.handle) return entry;
@@ -164,15 +172,72 @@
     else if (existing) existing.remove();
   }
 
-  function setHidden(renderer, hidden) {
-    if (hidden) {
-      if (renderer.getAttribute('data-ycb-hidden') === '1') return;
-      renderer.setAttribute('data-ycb-hidden', '1');
-      renderer.style.setProperty('display', 'none', 'important');
-    } else if (renderer.getAttribute('data-ycb-hidden') === '1') {
+  let pendingFilteredCount = 0;
+  let statsTimer = null;
+
+  function recordFiltered(renderer) {
+    if (renderer.getAttribute('data-ycb-counted') === '1') return;
+    renderer.setAttribute('data-ycb-counted', '1');
+    pendingFilteredCount++;
+    clearTimeout(statsTimer);
+    statsTimer = setTimeout(async () => {
+      const increment = pendingFilteredCount;
+      pendingFilteredCount = 0;
+      try {
+        const stored = await chrome.storage.local.get(YCB_STATS_KEY);
+        const total = Number(stored[YCB_STATS_KEY]) || 0;
+        await chrome.storage.local.set({ [YCB_STATS_KEY]: total + increment });
+      } catch (_) { /* Metrics are optional; filtering must continue if storage fails. */ }
+    }, 700);
+  }
+
+  function setHidden(renderer, entry) {
+    const hidden = !!entry;
+    const placeholder = renderer.querySelector(':scope > .ycb-filter-placeholder');
+    if (!hidden) {
+      if (renderer.getAttribute('data-ycb-hidden') === '1') {
+        renderer.removeAttribute('data-ycb-hidden');
+        renderer.style.removeProperty('display');
+      }
+      renderer.removeAttribute('data-ycb-mode');
+      if (placeholder) placeholder.remove();
+      return;
+    }
+
+    recordFiltered(renderer);
+    if (filterMode === 'placeholder') {
       renderer.removeAttribute('data-ycb-hidden');
       renderer.style.removeProperty('display');
+      renderer.setAttribute('data-ycb-mode', 'placeholder');
+      if (getComputedStyle(renderer).position === 'static') renderer.style.position = 'relative';
+      if (!placeholder) {
+        const note = document.createElement('div');
+        note.className = 'ycb-filter-placeholder';
+        const message = document.createElement('span');
+        message.textContent = 'Content from a blocked channel';
+        const undo = document.createElement('button');
+        undo.type = 'button';
+        undo.textContent = 'Unblock';
+        undo.addEventListener('click', async (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          await ycbRemoveEntry({ type: note.dataset.ycbType, value: note.dataset.ycbValue });
+        });
+        note.append(message, undo);
+        renderer.appendChild(note);
+      }
+      const currentPlaceholder = renderer.querySelector(':scope > .ycb-filter-placeholder');
+      if (currentPlaceholder) {
+        currentPlaceholder.dataset.ycbType = entry.type;
+        currentPlaceholder.dataset.ycbValue = entry.value;
+      }
+      return;
     }
+
+    renderer.removeAttribute('data-ycb-mode');
+    if (placeholder) placeholder.remove();
+    renderer.setAttribute('data-ycb-hidden', '1');
+    renderer.style.setProperty('display', 'none', 'important');
   }
 
   function removeDialog() {
@@ -216,7 +281,7 @@
     });
   }
 
-  function showResultDialog(message, tone) {
+  function showResultDialog(message, tone, undoEntry) {
     removeDialog();
 
     const box = document.createElement('div');
@@ -234,12 +299,24 @@
     okButton.type = 'button';
     okButton.className = 'ycb-dialog-ok-btn';
     okButton.textContent = 'OK';
-    box.append(result, okButton);
+    box.append(result);
+    if (undoEntry) {
+      const undoButton = document.createElement('button');
+      undoButton.type = 'button';
+      undoButton.className = 'ycb-dialog-undo-btn';
+      undoButton.textContent = 'Undo block';
+      undoButton.addEventListener('click', async () => {
+        await ycbRemoveEntry(undoEntry);
+        removeDialog();
+      });
+      box.appendChild(undoButton);
+    }
+    box.appendChild(okButton);
     document.body.appendChild(box);
     requestAnimationFrame(() => box.classList.add('ycb-dialog-show'));
 
     okButton.addEventListener('click', removeDialog);
-    setTimeout(removeDialog, 3000);
+    setTimeout(removeDialog, undoEntry ? 6000 : 3000);
   }
 
   async function confirmAndBlock(entry, label) {
@@ -251,7 +328,8 @@
       const { added } = await ycbAddEntry(entry, label);
       showResultDialog(
         added ? ((label || entry.value) + ' has been blocked.') : ((label || entry.value) + ' was already blocked.'),
-        'ok'
+        'ok',
+        added ? entry : null
       );
     });
   }
@@ -293,7 +371,7 @@
 
     const info = extractChannelInfo(renderer);
     const entry = matchAnyChannelIn(renderer);
-    setHidden(renderer, !!entry);
+    setHidden(renderer, entry);
     if (!entry) attachBlockButton(renderer, info);
   }
 
@@ -457,13 +535,26 @@
   async function refreshState() {
     const state = await ycbGetState();
     blockList = state.list;
+    allowedList = state.allowed;
     enabled = state.enabled;
+    filterMode = state.mode;
+    scheduleExpiryRefresh();
     rescanAll();
+  }
+
+  function scheduleExpiryRefresh() {
+    clearTimeout(expiryTimer);
+    const now = Date.now();
+    const next = blockList.reduce((soonest, entry) => {
+      const expiry = Number(entry.expiresAt) || 0;
+      return expiry > now && (!soonest || expiry < soonest) ? expiry : soonest;
+    }, 0);
+    if (next) expiryTimer = setTimeout(() => refreshState(), Math.min(Math.max(next - now + 100, 100), 2147483000));
   }
 
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'sync') return;
-    if (changes[YCB_STORAGE_KEY] || changes[YCB_ENABLED_KEY]) refreshState();
+    if (changes[YCB_STORAGE_KEY] || changes[YCB_ALLOWED_KEY] || changes[YCB_ENABLED_KEY] || changes[YCB_MODE_KEY]) refreshState();
   });
 
   const observer = new MutationObserver((mutations) => {

@@ -247,3 +247,8 @@ body {
   text-decoration: none;
 }
 .foot a:hover { color: var(--positive); }
+
+
+.status-msg { padding-top: 7px; flex-wrap: wrap; }
+.status-undo { border: 1px solid #536c95; border-radius: 4px; padding: 3px 7px; background: rgba(91,141,239,.12); color: #b9d0fa; font: inherit; font-size: 10.5px; cursor: pointer; }
+.status-undo:hover { border-color: var(--positive); color: #fff; }

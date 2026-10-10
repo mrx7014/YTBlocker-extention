@@ -16,14 +16,27 @@
           <h1>Channel Blocker</h1>
         </div>
       </div>
-      <label class="switch" title="Turn blocking on or off">
-        <input type="checkbox" id="enabledToggle" checked />
-        <span class="switch-track"><span class="switch-thumb"></span></span>
-        <span id="enabledLabel" class="switch-label">On</span>
-      </label>
+      <div class="head-controls">
+        <label class="mode-picker">Blocked-card style
+          <select id="filterModeToggle" aria-label="Choose how blocked cards appear">
+            <option value="hide">Hide completely</option>
+            <option value="placeholder">Show placeholder</option>
+          </select>
+        </label>
+        <label class="switch" title="Turn blocking on or off">
+          <input type="checkbox" id="enabledToggle" checked />
+          <span class="switch-track"><span class="switch-thumb"></span></span>
+          <span id="enabledLabel" class="switch-label">On</span>
+        </label>
+      </div>
     </header>
 
-    <p class="page-sub">Manage your blocked channels in one place. Changes sync with your browser profile.</p>
+    <p class="page-sub">Manage blocked channels, exceptions, and filtering behavior. Your lists sync with your browser profile; usage statistics stay on this device.</p>
+    <section class="stats-strip" aria-label="Blocker statistics">
+      <div><span class="stat-dot blocked-dot"></span><strong id="totalBlockedStat">0</strong><span>blocked channels</span></div>
+      <div><span class="stat-dot filtered-dot"></span><strong id="filteredCountStat">0</strong><span>items filtered <small>(estimate)</small></span></div>
+      <button id="resetStatsBtn" type="button" class="text-button">Reset stats</button>
+    </section>
 
     <section class="panel">
       <div class="section-intro">
@@ -38,9 +51,23 @@
           <option value="name">Channel name</option>
         </select>
         <input id="addInput" type="text" placeholder="Paste a link, @handle, ID, or name" autocomplete="off" />
+        <select id="expirySelect" aria-label="Block duration">
+          <option value="0">Until I unblock</option>
+          <option value="3600000">1 hour</option>
+          <option value="86400000">24 hours</option>
+          <option value="604800000">7 days</option>
+        </select>
+        <select id="categoryInput" aria-label="Channel category">
+          <option value="General">General</option>
+          <option value="Spam">Spam</option>
+          <option value="Kids">Kids</option>
+          <option value="Not interested">Not interested</option>
+          <option value="Other">Other</option>
+        </select>
+        <input id="noteInput" type="text" placeholder="Optional note" aria-label="Optional note" maxlength="120" />
         <button id="addBtn" type="button" class="btn btn-primary"><span aria-hidden="true">＋</span> Add channel</button>
       </div>
-      <p class="hint">For the most precise match, use a channel ID or @handle. Names may match similarly named channels.</p>
+      <p class="hint">For exact matches, use a channel ID or @handle. Name matches are approximate and may catch similarly named channels.</p>
     </section>
 
     <section class="panel">
@@ -63,45 +90,54 @@
         </div>
       </div>
       <p class="transfer-hint">Choose JSON or CSV to export. Imports detect the format from the selected file.</p>
-
       <div class="list-toolbar">
-        <label class="search-box" for="searchInput">
-          <span aria-hidden="true">⌕</span>
-          <input id="searchInput" type="search" placeholder="Search by channel, handle, or ID" autocomplete="off" />
-        </label>
+        <label class="search-box" for="searchInput"><span aria-hidden="true">⌕</span><input id="searchInput" type="search" placeholder="Search by channel, handle, or ID" autocomplete="off" /></label>
         <label class="sort-control">Sort
           <select id="sortSelect" aria-label="Sort blocked channels">
-            <option value="newest">Recently added</option>
-            <option value="oldest">Oldest added</option>
-            <option value="name">Name A–Z</option>
+            <option value="newest">Recently added</option><option value="oldest">Oldest added</option><option value="name">Name A–Z</option>
           </select>
         </label>
       </div>
       <p id="listSummary" class="list-summary" aria-live="polite"></p>
-
+      <div id="bulkToolbar" class="bulk-toolbar" hidden>
+        <span id="selectedCount">0 selected</span>
+        <button id="bulkExportBtn" type="button" class="btn btn-ghost">Export selected</button>
+        <button id="bulkRemoveBtn" type="button" class="btn btn-ghost btn-ghost-danger">Remove selected</button>
+      </div>
       <div class="table-scroll">
-      <table id="listTable" class="list-table">
-        <thead>
-          <tr>
-            <th>Channel</th>
-            <th>Match type</th>
-            <th>Value</th>
-            <th>Added</th>
-            <th><span class="sr-only">Actions</span></th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
+        <table id="listTable" class="list-table">
+          <thead><tr>
+            <th><input id="selectAllRows" type="checkbox" aria-label="Select all visible channels" /></th><th>Channel</th><th>Category</th><th>Match type</th><th>Value</th><th>Note</th><th>Expires</th><th>Added</th><th><span class="sr-only">Actions</span></th>
+          </tr></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
       </div>
       <div id="emptyState" class="empty-state">
-        <span class="empty-icon" aria-hidden="true">⌕</span>
-        <strong id="emptyTitle">Nothing blocked yet</strong>
-        <span id="emptyHint">Add a channel above and it will appear here.</span>
+        <span class="empty-icon" aria-hidden="true">⌕</span><strong id="emptyTitle">Nothing blocked yet</strong><span id="emptyHint">Add a channel above and it will appear here.</span>
       </div>
     </section>
+
+    <section class="panel allow-panel">
+      <div class="section-intro">
+        <span class="section-icon section-icon-allowed" aria-hidden="true">✓</span>
+        <div><h2>Always allow these channels</h2><p>Allowlist entries override matching block rules. IDs and handles match exactly; names must match exactly.</p></div>
+      </div>
+      <div class="allow-add-row">
+        <select id="allowType" aria-label="Allowlist match type">
+          <option value="auto">Auto-detect</option><option value="id">Channel ID</option><option value="handle">Handle</option><option value="name">Exact channel name</option>
+        </select>
+        <input id="allowInput" type="text" placeholder="Channel ID, @handle, or exact name" autocomplete="off" />
+        <button id="allowAddBtn" type="button" class="btn btn-primary">Add exception</button>
+      </div>
+      <div class="allow-list-wrap">
+        <p class="allow-count"><span id="allowCount">0</span> allowed exceptions</p>
+        <ul id="allowList" class="allow-list"></ul>
+        <p id="allowEmpty" class="allow-empty">No exceptions added.</p>
+      </div>
+    </section>
+
     <div id="statusMsg" class="status-toast" role="status" aria-live="polite" hidden></div>
   </div>
-
   <script src="common.js"></script>
   <script src="options.js"></script>
 </body>

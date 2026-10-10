@@ -6,6 +6,9 @@
 
 const YCB_STORAGE_KEY = 'blockedChannels';
 const YCB_ENABLED_KEY = 'enabled';
+const YCB_ALLOWED_KEY = 'allowedChannels';
+const YCB_MODE_KEY = 'filterMode';
+const YCB_STATS_KEY = 'filteredCount';
 
 const YCB_ID_PATTERN = /UC[A-Za-z0-9_-]{22}/;
 const YCB_HANDLE_PATTERN = /@[A-Za-z0-9._-]{3,30}/;
@@ -57,28 +60,47 @@ function ycbParseChannelFromUrl(urlString) {
 }
 
 async function ycbGetState() {
-  const res = await chrome.storage.sync.get([YCB_STORAGE_KEY, YCB_ENABLED_KEY]);
+  const res = await chrome.storage.sync.get([
+    YCB_STORAGE_KEY, YCB_ENABLED_KEY, YCB_ALLOWED_KEY, YCB_MODE_KEY
+  ]);
+  const storedList = Array.isArray(res[YCB_STORAGE_KEY]) ? res[YCB_STORAGE_KEY] : [];
+  const now = Date.now();
+  const list = storedList.filter((entry) => !entry.expiresAt || Number(entry.expiresAt) > now);
+  if (list.length !== storedList.length) {
+    await chrome.storage.sync.set({ [YCB_STORAGE_KEY]: list });
+  }
   return {
-    list: Array.isArray(res[YCB_STORAGE_KEY]) ? res[YCB_STORAGE_KEY] : [],
-    enabled: res[YCB_ENABLED_KEY] !== false
+    list,
+    allowed: Array.isArray(res[YCB_ALLOWED_KEY]) ? res[YCB_ALLOWED_KEY] : [],
+    enabled: res[YCB_ENABLED_KEY] !== false,
+    mode: res[YCB_MODE_KEY] === 'placeholder' ? 'placeholder' : 'hide'
   };
 }
 
-async function ycbAddEntry(entry, label) {
-  const { list } = await ycbGetState();
+async function ycbAddEntry(entry, label, metadata, storageKey) {
+  const keyName = storageKey || YCB_STORAGE_KEY;
+  const res = await chrome.storage.sync.get(keyName);
+  const list = Array.isArray(res[keyName]) ? res[keyName] : [];
   const key = ycbEntryKey(entry);
   if (list.some((e) => ycbEntryKey(e) === key)) return { added: false, list };
-  const full = { ...entry, label: label || entry.value, addedAt: Date.now() };
+  const full = {
+    ...entry,
+    ...(metadata || {}),
+    label: label || entry.value,
+    addedAt: Date.now()
+  };
   const updated = [...list, full];
-  await chrome.storage.sync.set({ [YCB_STORAGE_KEY]: updated });
+  await chrome.storage.sync.set({ [keyName]: updated });
   return { added: true, list: updated };
 }
 
-async function ycbRemoveEntry(entry) {
-  const { list } = await ycbGetState();
+async function ycbRemoveEntry(entry, storageKey) {
+  const keyName = storageKey || YCB_STORAGE_KEY;
+  const res = await chrome.storage.sync.get(keyName);
+  const list = Array.isArray(res[keyName]) ? res[keyName] : [];
   const key = ycbEntryKey(entry);
   const updated = list.filter((e) => ycbEntryKey(e) !== key);
-  await chrome.storage.sync.set({ [YCB_STORAGE_KEY]: updated });
+  await chrome.storage.sync.set({ [keyName]: updated });
   return updated;
 }
 

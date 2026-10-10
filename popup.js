@@ -19,17 +19,36 @@
   let statusTimer = null;
   let pendingChoice = null;
 
-  function showStatus(text) {
+  function showStatus(text, undoEntry) {
     clearTimeout(statusTimer);
-    statusMsg.textContent = text;
+    statusMsg.replaceChildren();
+    const message = document.createElement('span');
+    message.textContent = text;
+    statusMsg.appendChild(message);
+    if (undoEntry) {
+      const undo = document.createElement('button');
+      undo.type = 'button';
+      undo.className = 'status-undo';
+      undo.textContent = 'Undo';
+      undo.addEventListener('click', async () => {
+        await ycbRemoveEntry(undoEntry);
+        const state = await ycbGetState();
+        render(state.list);
+        refreshCurrentRow();
+        showStatus('Block undone.');
+      });
+      statusMsg.appendChild(undo);
+    }
     statusMsg.hidden = false;
     statusTimer = setTimeout(() => {
       statusMsg.hidden = true;
-    }, 2500);
+    }, undoEntry ? 6000 : 2500);
   }
 
-  function askToBlock(label, onChoice) {
-    confirmMsg.textContent = 'Block "' + label + '"?';
+  function askToBlock(label, onChoice, approximateName) {
+    confirmMsg.textContent = approximateName
+      ? 'Name matching is approximate and may block similar channels. Use an ID or @handle for precision. Block "' + label + '" anyway?'
+      : 'Block "' + label + '"?';
     confirmBar.hidden = false;
     pendingChoice = onChoice;
   }
@@ -111,8 +130,8 @@
       addInput.value = '';
       render(updated);
       refreshCurrentRow();
-      showStatus(added ? (parsed.value + ' has been blocked.') : (parsed.value + ' is already blocked.'));
-    });
+      showStatus(added ? (parsed.value + ' has been blocked.') : (parsed.value + ' is already blocked.'), added ? parsed : null);
+    }, parsed.type === 'name');
   });
 
   addInput.addEventListener('keydown', (e) => {
@@ -199,7 +218,7 @@
         detected.label
       );
       render(updated);
-      showStatus(detected.label + ' has been blocked.');
+      showStatus(detected.label + ' has been blocked.', { type: detected.type, value: detected.value });
       currentRow.hidden = true;
       currentDetected = null;
     });
