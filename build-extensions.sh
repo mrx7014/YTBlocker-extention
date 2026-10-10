@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DIST_DIR="$ROOT_DIR/dist"
+VERSION="1.1.0"
 BUILD_DIR="$(mktemp -d)"
 trap 'rm -rf "$BUILD_DIR"' EXIT
 
@@ -35,7 +36,7 @@ build_web() {
   copy_extension_files "$package_dir"
   cp "$ROOT_DIR/platforms/web/manifest.json" "$package_dir/manifest.json"
   cp "$ROOT_DIR/background.js" "$package_dir/background.js"
-  (cd "$package_dir" && zip -q -r "$DIST_DIR/youtube-channel-blocker-web-v1.0.0.zip" .)
+  (cd "$package_dir" && zip -q -r "$DIST_DIR/youtube-channel-blocker-web-v${VERSION}.zip" .)
 }
 
 build_android() {
@@ -43,12 +44,12 @@ build_android() {
   copy_extension_files "$package_dir"
   cp "$ROOT_DIR/platforms/android/manifest.json" "$package_dir/manifest.json"
   tail -n +2 "$ROOT_DIR/background.js" > "$package_dir/background.js"
-  (cd "$package_dir" && zip -q -r "$DIST_DIR/youtube-channel-blocker-android-v1.0.0.zip" .)
+  (cd "$package_dir" && zip -q -r "$DIST_DIR/youtube-channel-blocker-android-v${VERSION}.zip" .)
 }
 
 mkdir -p "$DIST_DIR"
-rm -f "$DIST_DIR/youtube-channel-blocker-web-v1.0.0.zip" \
-      "$DIST_DIR/youtube-channel-blocker-android-v1.0.0.zip"
+rm -f "$DIST_DIR/youtube-channel-blocker-web-v${VERSION}.zip" \
+      "$DIST_DIR/youtube-channel-blocker-android-v${VERSION}.zip"
 
 python3 -m json.tool "$ROOT_DIR/platforms/web/manifest.json" >/dev/null
 python3 -m json.tool "$ROOT_DIR/platforms/android/manifest.json" >/dev/null
@@ -58,5 +59,5 @@ build_web
 build_android
 
 echo "Built:"
-ls -lh "$DIST_DIR/youtube-channel-blocker-web-v1.0.0.zip" \
-       "$DIST_DIR/youtube-channel-blocker-android-v1.0.0.zip"
+ls -lh "$DIST_DIR/youtube-channel-blocker-web-v${VERSION}.zip" \
+       "$DIST_DIR/youtube-channel-blocker-android-v${VERSION}.zip"

@@ -29,6 +29,12 @@ The full options page provides the blocklist manager, matching-type controls, im
 - Enable or disable filtering globally without deleting the blocklist.
 - Use the same source package in Chrome, Microsoft Edge, Brave, and other Chromium-based browsers that support Manifest V3.
 
+## What's new in 1.1.0
+
+- Blocked channel profile pages, including their Videos, Shorts, Live, and Community tabs, are replaced by a blocked notice with an unblock action.
+- Supported video and post cards are hidden when they contain a link identifying a blocked channel, including some collaboration cards.
+- Collaboration cards without a visible channel link or identity may not be detectable.
+
 ## Installation for development
 
 1. Clone or download this repository.
