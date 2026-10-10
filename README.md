@@ -20,6 +20,8 @@ The full options page provides the blocklist manager, matching-type controls, im
 
 - Block channels by channel ID, `@handle`, or display name.
 - Hide blocked content from feeds, search results, watch pages, channel pages, playlists, Shorts-related cards, and comments.
+- Replace a blocked channel's direct channel, Videos, Shorts, Live, and Community pages with a blocked notice.
+- Hide supported post/video cards that link to a blocked channel, including cards that mention a blocked channel as a collaborator.
 - Replace a blocked channel's watch-page player with a clear notice and an **Unblock and watch** action.
 - Block channels through the toolbar popup, a right-click context menu, or a hover action on supported cards.
 - Add a channel link, handle, ID, or name manually.
@@ -120,9 +122,9 @@ The extension only operates on YouTube pages covered by its manifest matches and
 
 ## Known limitations
 
-YouTube changes its page structure regularly. If a particular card type stops being filtered, the relevant selector in `content.js` may need to be updated.
+YouTube changes its page structure regularly. If a particular card type stops being filtered, the relevant selector in `content.js` may need to be updated. Collaboration filtering is based on channel links present in a card; YouTube does not expose a consistent collaborator identity on every surface, so cards that do not link to or identify the blocked channel cannot always be detected.
 
-Name matching is based on visible text and is less precise than matching a channel ID or handle. The extension is designed for client-side filtering and does not prevent a blocked channel from appearing in every possible YouTube surface or in content outside YouTube.
+Name matching is based on visible text and is less precise than matching a channel ID or handle. The extension is designed for client-side filtering: on a blocked channel's own page it covers the page with a notice, while on other pages it hides supported matching cards. It does not prevent YouTube from downloading content, block content outside YouTube, or guarantee detection on every YouTube surface.
 
 ## Contributing
 

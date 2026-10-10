@@ -221,3 +221,16 @@
   cursor: pointer;
 }
 .ycb-dialog-ok-btn:hover { color: #EDEEF0; border-color: #9AA0A8; }
+
+.ycb-channel-page-block {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483646;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0f1012;
+  color: #EDEEF0;
+  font-family: "Roboto", Arial, sans-serif;
+  text-align: center;
+}

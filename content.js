@@ -16,6 +16,11 @@
     'ytd-comment-renderer',
     'ytd-comment-view-model',
     'ytd-comment-thread-renderer',
+    'ytd-backstage-post-renderer',
+    'ytd-post-renderer',
+    'ytd-rich-grid-media',
+    'ytd-reel-shelf-renderer',
+    'ytd-shelf-renderer',
     'yt-lockup-view-model',
     'ytm-video-with-context-renderer'
   ];
@@ -75,6 +80,85 @@
           info.name.toLowerCase().includes(entry.value.toLowerCase())) return entry;
     }
     return null;
+  }
+
+  // Cards may mention several channels (for example, a collaboration).
+  // Match every channel URL inside the card, not only its primary author.
+  function matchAnyChannelIn(scopeEl) {
+    const candidates = [scopeEl, ...scopeEl.querySelectorAll(CHANNEL_LINK_SELECTOR)];
+    for (const candidate of candidates) {
+      const href = candidate.getAttribute && candidate.getAttribute('href');
+      if (href) {
+        const id = href.match(/(?:^|\/)channel\/(UC[A-Za-z0-9_-]{22})(?:[/?#]|$)/);
+        const handle = href.match(/(?:^|\/)(@[A-Za-z0-9._-]{3,30})(?:[/?#]|$)/);
+        const entry = matchEntry({ id: id && id[1], handle: handle && handle[1].toLowerCase(), name: null });
+        if (entry) return entry;
+      }
+    }
+    return matchEntry(extractChannelInfo(scopeEl));
+  }
+
+  function currentChannelEntry() {
+    const path = location.pathname;
+    const idMatch = path.match(/^\/channel\/(UC[A-Za-z0-9_-]{22})(?:\/|$)/);
+    const handleMatch = path.match(/^\/@([A-Za-z0-9._-]{3,30})(?:\/|$)/);
+    const info = {
+      id: idMatch ? idMatch[1] : null,
+      handle: handleMatch ? ('@' + handleMatch[1]).toLowerCase() : null,
+      name: null
+    };
+    const heading = document.querySelector(
+      'ytd-c4-tabbed-header-renderer #text, ytd-channel-name #text, #channel-header #text, yt-page-header-view-model h1'
+    );
+    if (heading && heading.textContent) info.name = heading.textContent.trim();
+    if (!info.id && !info.handle && !info.name) return null;
+    return matchEntry(info);
+  }
+
+  function showChannelPageBlock(entry) {
+    if (!document.body) return;
+    const key = entry.type + ':' + entry.value;
+    let veil = document.querySelector('.ycb-channel-page-block');
+    if (veil && veil.dataset.ycbKey !== key) {
+      veil.remove();
+      veil = null;
+    }
+    if (!veil) {
+      veil = document.createElement('div');
+      veil.className = 'ycb-channel-page-block';
+      const card = document.createElement('div');
+      card.className = 'ycb-overlay-card';
+      const title = document.createElement('p');
+      title.className = 'ycb-overlay-title';
+      title.textContent = 'This channel is blocked';
+      const subtitle = document.createElement('p');
+      subtitle.className = 'ycb-overlay-sub';
+      subtitle.textContent = entry.label || entry.value;
+      const unblock = document.createElement('button');
+      unblock.type = 'button';
+      unblock.className = 'ycb-overlay-btn';
+      unblock.textContent = 'Unblock and view channel';
+      unblock.addEventListener('click', async () => {
+        await ycbRemoveEntry(entry);
+        veil.remove();
+      });
+      card.append(title, subtitle, unblock);
+      veil.appendChild(card);
+      document.body.appendChild(veil);
+    }
+    veil.dataset.ycbKey = key;
+  }
+
+  function checkChannelPage() {
+    const isChannelPage = /^\/(?:@[^/]+|channel\/|user\/|c\/)/.test(location.pathname);
+    const existing = document.querySelector('.ycb-channel-page-block');
+    if (!enabled || !isChannelPage) {
+      if (existing) existing.remove();
+      return;
+    }
+    const entry = currentChannelEntry();
+    if (entry) showChannelPageBlock(entry);
+    else if (existing) existing.remove();
   }
 
   function setHidden(renderer, hidden) {
@@ -205,7 +289,7 @@
     renderer.setAttribute('data-ycb-v', String(listVersion));
 
     const info = extractChannelInfo(renderer);
-    const entry = matchEntry(info);
+    const entry = matchAnyChannelIn(renderer);
     setHidden(renderer, !!entry);
     if (!entry) attachBlockButton(renderer, info);
   }
@@ -280,6 +364,7 @@
   function rescanAll() {
     listVersion++;
     scan(document.body || document.documentElement);
+    checkChannelPage();
     checkWatchPage();
   }
 
@@ -301,10 +386,18 @@
       for (const node of m.addedNodes) {
         if (node.nodeType !== 1) continue;
         scan(node);
+        const parentRenderer = node.closest && node.closest(RENDERER_SELECTOR);
+        if (parentRenderer) {
+          parentRenderer.removeAttribute('data-ycb-v');
+          processRenderer(parentRenderer);
+        }
         touched = true;
       }
     }
-    if (touched) checkWatchPage();
+    if (touched) {
+      checkChannelPage();
+      checkWatchPage();
+    }
   });
 
   function start() {
