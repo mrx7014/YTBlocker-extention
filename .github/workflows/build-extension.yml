@@ -45,6 +45,9 @@ jobs:
             options.js
             options.css
             README.md
+            README_AR.md
+            CHANGELOG.md
+            CHANGELOG_AR.md
             LICENSE
             icons/icon16.png
             icons/icon32.png
@@ -71,20 +74,21 @@ jobs:
           for file in *.js; do node --check "$file"; done
 
       - name: Build both extension packages
+        id: build
         run: bash build-extensions.sh
 
       - name: Upload desktop extension
         uses: actions/upload-artifact@v4
         with:
-          name: youtube-channel-blocker-desktop-v1.5.0
-          path: dist/youtube-channel-blocker-desktop-v1.5.0.zip
+          name: youtube-channel-blocker-desktop-v${{ steps.build.outputs.version }}
+          path: dist/youtube-channel-blocker-desktop-v${{ steps.build.outputs.version }}.zip
           if-no-files-found: error
           retention-days: 30
 
       - name: Upload Android extension
         uses: actions/upload-artifact@v4
         with:
-          name: youtube-channel-blocker-android-v1.5.0
-          path: dist/youtube-channel-blocker-android-v1.5.0.zip
+          name: youtube-channel-blocker-android-v${{ steps.build.outputs.version }}
+          path: dist/youtube-channel-blocker-android-v${{ steps.build.outputs.version }}.zip
           if-no-files-found: error
           retention-days: 30

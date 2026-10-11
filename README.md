@@ -1,5 +1,7 @@
 # YouTube Channel Blocker
 
+**Documentation:** English | [العربية](README_AR.md) · [Changelog](CHANGELOG.md) | [سجل التغييرات بالعربية](CHANGELOG_AR.md)
+
 ![YouTube Channel Blocker banner](assets/youtube-channel-blocker-banner.png)
 
 A lightweight browser extension for hiding videos, comments, search results, channel cards, playlists, and other YouTube content from channels you choose to block.
@@ -26,47 +28,30 @@ The full options page provides the blocklist manager, matching-type controls, im
 - Block channels through the toolbar popup, a right-click context menu, or a hover action on supported cards.
 - Add a channel link, handle, ID, or name manually.
 - Manage, remove, import, and export blocked channels from the options page.
+- Temporarily block channels, add allowlist exceptions, organize entries with categories and notes, and undo recent actions.
+- Search, sort, bulk-select, export, and remove entries; import/export JSON or CSV, including channel metadata.
+- Filter videos by title keywords or phrases, using substring or whole-word matching.
+- Choose whether blocked cards are hidden or replaced with a notice, and view a locally stored approximate filtered-item count.
 - Enable or disable filtering globally without deleting the blocklist.
 - Use the same source package in Chrome, Microsoft Edge, Brave, and other Chromium-based browsers that support Manifest V3.
 
-## What's new in 1.1.0
+## What's new in 2.0.0
 
-- Blocked channel profile pages, including their Videos, Shorts, Live, and Community tabs, are replaced by a blocked notice with an unblock action.
-- Supported video and post cards are hidden when they contain a link identifying a blocked channel, including some collaboration cards.
-- Collaboration cards without a visible channel link or identity may not be detectable.
+Version 2.0.0 brings together the feature releases made since 1.1.0: channel-page and related-card filtering, more reliable blocked watch pages, improved blocklist management, JSON/CSV import and export, temporary blocks and allowlists, categories and notes, undo and local statistics, and title-keyword filtering. It also aligns package versions and provides version-derived desktop and Android build artifacts. See the full [changelog](CHANGELOG.md).
 
-## What's new in 1.1.1
+## Installation and updates
 
-- When a blocked channel's watch page is opened, stop and mute its video even if YouTube tries to start or replace the player after the notice appears. Restore the previous volume/mute state when unblocked.
+### Desktop (Chromium browsers)
 
-## What's new in 1.2.0
+Download `youtube-channel-blocker-desktop-v2.0.0.zip` from the completed GitHub Actions workflow artifacts, then extract it to a stable folder. Open `chrome://extensions` (Chrome), `edge://extensions` (Edge), or `brave://extensions` (Brave), enable **Developer mode**, choose **Load unpacked**, and select the extracted folder containing `manifest.json`.
 
-- Refresh the options page with live search, sorting, responsive channel-list controls, clearer feedback, and safer blocklist imports.
-- Keep the settings list synchronized when the blocklist changes in another browser window or device.
+To update, extract the newer package to the same stable folder and select **Reload** on the extensions page. Avoid loading a second copy from another folder. The blocklist is kept in browser extension storage; do not clear browser extension data when updating.
 
-## What's new in 1.3.0
+### Firefox for Android
 
-- Export the blocklist as either JSON or CSV, and import either format by selecting the file.
-- CSV exports quote and escape values, preserving commas, quotes, and line breaks in channel names.
+Use the Android package from the workflow artifacts. It targets Firefox for Android 142 or newer. Depending on the Firefox release channel, sideloading may require temporary loading or additional setup. Permanent distribution requires signing through Mozilla Add-ons.
 
-## What's new in 1.4.0
-
-- Choose a temporary block duration (1 hour, 24 hours, or 7 days), or keep a channel blocked until manually unblocked.
-- Undo recent block/unblock actions directly from the confirmation or status message.
-- Add an allowlist exception; exact IDs, handles, and names in this list override matching block rules.
-- Select multiple blocked channels to export or remove them together.
-- Assign and edit categories and notes for blocked channels; these fields are included in JSON and CSV exports.
-- Choose whether blocked cards are hidden completely or replaced with a notice.
-- Warn before using approximate channel-name matching and recommend an ID or @handle for precision.
-- Show an approximate count of filtered items. This statistic is stored locally in the browser and can be reset.
-
-## What's new in 1.5.0
-
-- Add case-insensitive title-keyword filters using either substring/phrase matching or whole-word matching.
-- Hide only the matching video card; the channel and its other videos remain available. On a matching watch page, playback is paused and muted behind a video-specific notice with a “view anyway” option.
-- Keyword rules sync with the browser profile and can be managed from the settings page.
-
-## Installation for development
+### Development install
 
 1. Clone or download this repository.
 2. Open your browser's extensions page:
@@ -108,6 +93,7 @@ Name-based matching is intentionally flexible. It can match more than one simila
 | File or directory | Purpose |
 | --- | --- |
 | `manifest.json` | Manifest V3 metadata, permissions, scripts, icons, and browser entry points |
+| `platforms/web/manifest.json`, `platforms/android/manifest.json` | Platform-specific package manifests |
 | `background.js` | Service worker for context-menu actions |
 | `common.js` | Shared normalization and synchronized-storage helpers |
 | `content.js` | YouTube DOM scanning, filtering, overlays, and block controls |
@@ -118,30 +104,30 @@ Name-based matching is intentionally flexible. It can match more than one simila
 | `assets/logos/` | Platform-specific Firefox Desktop and Firefox for Android logos |
 | `assets/youtube-channel-blocker-banner.png` | Repository and store-listing banner |
 | `.github/workflows/build-extension.yml` | Automated validation and ZIP packaging workflow |
+| `README.md`, `README_AR.md` | English and Arabic documentation |
+| `CHANGELOG.md`, `CHANGELOG_AR.md` | English and Arabic release history |
 
 ## Build locally
 
 The extension does not require dependency installation or a bundler. Its source files can be loaded directly by a browser.
 
-To validate the source and produce a distributable ZIP on Linux or macOS, run:
+To validate the source and produce versioned desktop and Android ZIP packages on Linux or macOS, run:
 
 ```bash
 python3 -m json.tool manifest.json >/dev/null
+python3 -m json.tool platforms/web/manifest.json >/dev/null
+python3 -m json.tool platforms/android/manifest.json >/dev/null
 for file in *.js; do node --check "$file"; done
-mkdir -p dist
-zip -r -FS dist/youtube-channel-blocker.zip \
-  manifest.json background.js common.js content.js content.css \
-  popup.html popup.js popup.css \
-  options.html options.js options.css icons README.md LICENSE
+bash build-extensions.sh
 ```
 
-The resulting archive can be uploaded to a release or shared as an unpacked-extension source package. For browser development, load the repository directory itself rather than the ZIP file.
+The versioned packages are written to `dist/`; `dist/youtube-channel-blocker.zip` is refreshed as a compatibility alias for the desktop package. For browser development, load the repository directory itself rather than the ZIP file.
 
 ## Automated builds
 
 Every push to `main` and every pull request runs the GitHub Actions workflow. The workflow validates the manifests, checks JavaScript syntax with Node.js, verifies the required files, and builds separate desktop and Android packages.
 
-To download a build, open the completed workflow run on GitHub. In the **Artifacts** section, download either `youtube-channel-blocker-desktop-v1.5.0` or `youtube-channel-blocker-android-v1.5.0`; each contains that platform's ZIP package.
+To download a build, open the completed workflow run on GitHub. In the **Artifacts** section, download `youtube-channel-blocker-desktop-v<version>` or `youtube-channel-blocker-android-v<version>`; each contains the matching platform ZIP. The artifact names and filenames are derived from the synchronized manifest version.
 
 ## Privacy and permissions
 
